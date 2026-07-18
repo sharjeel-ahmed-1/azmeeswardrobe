@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Azmees Wardrobe — Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{ --stone:#EDE6D8; --ink:#221C14; --olive:#5B6B3D; --clay:#A6491F; --mustard:#D9A441; --line:rgba(34,28,20,0.15); --white:#fff; }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:var(--stone); color:var(--ink); font-family:'Inter',sans-serif;}
+  h1,h2,h3{font-family:'Fraunces',serif; font-weight:600;}
+  button{font-family:inherit; cursor:pointer;}
+  .wrap{max-width:1100px; margin:0 auto; padding:32px;}
+
+  #gate{max-width:360px; margin:120px auto; text-align:center;}
+  #gate input{width:100%; padding:12px 14px; border:1px solid var(--line); border-radius:3px; font-size:14px; margin:16px 0; background:var(--white);}
+  #gate button{width:100%; background:var(--ink); color:var(--stone); padding:12px; border:none; border-radius:3px; font-size:14px;}
+  #gate p{font-size:13px; color:rgba(34,28,20,0.6);}
+
+  #app{display:none;}
+  header{display:flex; justify-content:space-between; align-items:center; margin-bottom:28px;}
+  .tabs{display:flex; gap:8px; margin-bottom:24px;}
+  .tab{border:1px solid var(--ink); background:none; padding:9px 20px; border-radius:20px; font-size:13px;}
+  .tab.active{background:var(--ink); color:var(--stone);}
+  .panel{display:none;}
+  .panel.active{display:block;}
+
+  .box{background:var(--white); border:1px solid var(--line); border-radius:6px; padding:22px; margin-bottom:24px;}
+  .box h2{font-size:18px; margin-bottom:16px;}
+  .frow{display:flex; gap:14px; margin-bottom:14px;}
+  .field{flex:1; margin-bottom:0;}
+  .field label{font-size:12px; font-weight:500; display:block; margin-bottom:5px; color:rgba(34,28,20,0.7);}
+  .field input, .field select, .field textarea{width:100%; border:1px solid var(--line); border-radius:3px; padding:9px 11px; font-size:14px; font-family:inherit; background:var(--stone);}
+  .field input:focus, .field select:focus, .field textarea:focus{outline:none; border-color:var(--olive);}
+  .save-btn{background:var(--ink); color:var(--stone); border:none; padding:11px 26px; border-radius:3px; font-size:14px;}
+  .save-btn:hover{background:var(--olive);}
+  .img-preview{width:70px; height:88px; border-radius:3px; background:#f4f0e8; background-size:cover; background-position:center; border:1px solid var(--line); flex-shrink:0;}
+
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  th{text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:rgba(34,28,20,0.55); padding:8px 10px; border-bottom:1px solid var(--line);}
+  td{padding:10px; border-bottom:1px solid var(--line); vertical-align:top;}
+  .thumb{width:40px; height:50px; border-radius:3px; background:#f4f0e8; background-size:cover; background-position:center;}
+  .row-actions{display:flex; gap:8px;}
+  .row-actions button{border:1px solid var(--line); background:none; padding:5px 10px; border-radius:3px; font-size:12px;}
+  .row-actions button:hover{border-color:var(--olive);}
+  .row-actions .del{color:var(--clay); border-color:var(--clay);}
+  .stock-low{color:var(--clay); font-weight:600;}
+
+  .badge{font-size:11px; padding:3px 9px; border-radius:10px; font-weight:600;}
+  .badge.pending{background:rgba(217,164,65,0.25); color:#7a5510;}
+  .badge.confirmed{background:rgba(91,107,61,0.18); color:var(--olive);}
+  .badge.delivered{background:rgba(91,107,61,0.3); color:#3a4527;}
+
+  .order-card{background:var(--white); border:1px solid var(--line); border-radius:6px; padding:18px 20px; margin-bottom:14px;}
+  .order-top{display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;}
+  .order-id{font-family:'Fraunces',serif; font-size:16px;}
+  .order-meta{font-size:13px; color:rgba(34,28,20,0.7); margin-bottom:8px; line-height:1.7;}
+  .order-items{font-size:13px; margin-bottom:12px;}
+  .order-items div{padding:3px 0;}
+  .order-actions{display:flex; gap:10px; flex-wrap:wrap;}
+  .order-actions button{border:1px solid var(--ink); background:none; padding:8px 16px; border-radius:3px; font-size:13px;}
+  .order-actions button.primary{background:var(--ink); color:var(--stone);}
+  .order-actions button.wa{border-color:var(--olive); color:var(--olive);}
+  .empty{text-align:center; color:rgba(34,28,20,0.5); padding:40px; font-size:14px;}
+</style>
+</head>
+<body>
+
+<div id="gate">
+  <h1>Admin access</h1>
+  <p>Enter your admin passcode to continue.</p>
+  <input type="password" id="gatePass" placeholder="Passcode">
+  <button onclick="tryLogin()">Enter</button>
+</div>
+
+<div id="app" class="wrap">
+  <header>
+    <h1>Azmees Wardrobe — Admin</h1>
+    <button class="tab" style="border-radius:3px;" onclick="location.href='index.html'">View store</button>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" data-panel="categories">Categories</button>
+    <button class="tab" data-panel="products">Products</button>
+    <button class="tab" data-panel="orders">Orders</button>
+  </div>
+
+  <div class="panel active" id="panel-categories">
+    <div class="box">
+      <h2>Add a category</h2>
+      <div class="frow">
+        <div class="field"><label>Category name</label><input id="c_name" placeholder="e.g. Ladies Suits"></div>
+      </div>
+      <button class="save-btn" onclick="saveCategory()">Add category</button>
+    </div>
+    <div class="box">
+      <h2>Your categories</h2>
+      <table>
+        <thead><tr><th>Category</th><th>Products in it</th><th></th></tr></thead>
+        <tbody id="categoryTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-products">
+    <div class="box">
+      <h2 id="formTitle">Add a product</h2>
+      <input type="hidden" id="p_id">
+      <div class="frow">
+        <div class="field"><label>Category</label><select id="p_cat"></select></div>
+        <div class="field"><label>Product name</label><input id="p_name" placeholder="e.g. Ladies kurta shalwar"></div>
+      </div>
+      <div class="frow">
+        <div class="field"><label>Price (Rs.)</label><input id="p_price" type="number" placeholder="1290"></div>
+        <div class="field"><label>Quantity in stock</label><input id="p_stock" type="number" placeholder="20"></div>
+        <div class="field"><label>Tag (optional)</label><input id="p_tag" placeholder="New / Sale"></div>
+      </div>
+      <div class="frow">
+        <div class="field"><label>Sizes (comma separated)</label><input id="p_sizes" placeholder="S, M, L, XL"></div>
+        <div class="field"><label>Colors (comma separated)</label><input id="p_colors" placeholder="Black, White, Olive"></div>
+      </div>
+      <div class="frow">
+        <div class="field"><label>Description</label><textarea id="p_desc" rows="2" placeholder="Soft cotton crewneck, everyday fit."></textarea></div>
+      </div>
+      <div class="frow" style="align-items:flex-end;">
+        <div class="img-preview" id="p_imgPreview"></div>
+        <div class="field"><label>Product photo</label><input type="file" id="p_img" accept="image/*"></div>
+      </div>
+      <button class="save-btn" onclick="saveProduct()">Save product</button>
+      <button class="save-btn" style="background:none; color:var(--ink); border:1px solid var(--line); display:none;" id="cancelEdit" onclick="resetForm()">Cancel edit</button>
+    </div>
+
+    <div class="box">
+      <h2>Inventory</h2>
+      <table>
+        <thead><tr><th></th><th>Name</th><th>Category</th><th>Price</th><th>Stock</th><th>Sizes</th><th></th></tr></thead>
+        <tbody id="productTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-orders">
+    <div id="orderList"></div>
+  </div>
+</div>
+
+<script>
+function tryLogin(){
+  const val = document.getElementById('gatePass').value;
+  if(val === 'azmees2026'){
+    localStorage.setItem('aw_admin_ok','1');
+    document.getElementById('gate').style.display='none';
+    document.getElementById('app').style.display='block';
+    init();
+  } else {
+    document.getElementById('gatePass').style.borderColor = '#A6491F';
+    document.getElementById('gatePass').value='';
+    document.getElementById('gatePass').placeholder='Wrong passcode, try again';
+  }
+}
+if(localStorage.getItem('aw_admin_ok')==='1'){
+  document.getElementById('gate').style.display='none';
+  document.getElementById('app').style.display='block';
+  window.addEventListener('DOMContentLoaded', init);
+}
+
+document.querySelectorAll('.tab[data-panel]').forEach(t=>{
+  t.onclick = ()=>{
+    document.querySelectorAll('.tab[data-panel]').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    document.getElementById('panel-'+t.dataset.panel).classList.add('active');
+    if(t.dataset.panel==='orders') renderOrders();
+    if(t.dataset.panel==='categories') renderCategories();
+  };
+});
+
+let editImgData = '';
+
+function getCategories(){
+  const raw = localStorage.getItem('aw_categories');
+  if(!raw){ const def=['T-Shirts','Ladies Suits','Tracksuits','Shorts','Trousers']; localStorage.setItem('aw_categories', JSON.stringify(def)); return def; }
+  return JSON.parse(raw);
+}
+function setCategories(list){ localStorage.setItem('aw_categories', JSON.stringify(list)); }
+
+function saveCategory(){
+  const name = document.getElementById('c_name').value.trim();
+  if(!name) return;
+  const list = getCategories();
+  if(list.includes(name)){ alert('Category already exists.'); return; }
+  list.push(name);
+  setCategories(list);
+  document.getElementById('c_name').value='';
+  renderCategories();
+  populateCategoryDropdown();
+}
+
+function deleteCategory(name){
+  const inUse = getProducts().some(p=>p.cat===name);
+  if(inUse){ alert('Move or delete products in this category first.'); return; }
+  if(!confirm(`Delete category "${name}"?`)) return;
+  setCategories(getCategories().filter(c=>c!==name));
+  renderCategories();
+  populateCategoryDropdown();
+}
+
+function renderCategories(){
+  const cats = getCategories();
+  const products = getProducts();
+  document.getElementById('categoryTable').innerHTML = cats.map(c=>`
+    <tr>
+      <td>${c}</td>
+      <td>${products.filter(p=>p.cat===c).length}</td>
+      <td><button class="row-actions" style="border:1px solid var(--clay); color:var(--clay); background:none; padding:5px 10px; border-radius:3px; font-size:12px;" onclick="deleteCategory('${c}')">Delete</button></td>
+    </tr>`).join('') || `<tr><td colspan="3" class="empty">No categories yet.</td></tr>`;
+}
+
+function populateCategoryDropdown(){
+  document.getElementById('p_cat').innerHTML = getCategories().map(c=>`<option>${c}</option>`).join('');
+}
+
+function getProducts(){ return JSON.parse(localStorage.getItem('aw_products')||'[]'); }
+function setProducts(list){ localStorage.setItem('aw_products', JSON.stringify(list)); }
+
+function init(){
+  renderCategories();
+  populateCategoryDropdown();
+  renderProducts();
+  document.getElementById('p_img').onchange = (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ()=>{ editImgData = reader.result; document.getElementById('p_imgPreview').style.backgroundImage = `url(${editImgData})`; };
+    reader.readAsDataURL(file);
+  };
+}
+
+function renderProducts(){
+  const list = getProducts();
+  document.getElementById('productTable').innerHTML = list.map(p=>`
+    <tr>
+      <td><div class="thumb" style="${p.img?`background-image:url('${p.img}')`:''}"></div></td>
+      <td>${p.name}</td>
+      <td>${p.cat}</td>
+      <td>Rs. ${Number(p.price).toLocaleString()}</td>
+      <td class="${p.stock<=3?'stock-low':''}">${p.stock}</td>
+      <td>${p.sizes.join(', ')}</td>
+      <td>
+        <div class="row-actions">
+          <button onclick="editProduct(${p.id})">Edit</button>
+          <button class="del" onclick="deleteProduct(${p.id})">Delete</button>
+        </div>
+      </td>
+    </tr>`).join('') || `<tr><td colspan="7" class="empty">No products yet — add your first one above.</td></tr>`;
+}
+
+function saveProduct(){
+  const name = document.getElementById('p_name').value.trim();
+  const price = +document.getElementById('p_price').value;
+  const stock = +document.getElementById('p_stock').value;
+  const sizes = document.getElementById('p_sizes').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const colors = document.getElementById('p_colors').value.split(',').map(s=>s.trim()).filter(Boolean);
+  if(!name || !price || !stock || sizes.length===0 || colors.length===0){
+    alert('Fill name, price, stock, at least one size and one color.');
+    return;
+  }
+  const list = getProducts();
+  const id = document.getElementById('p_id').value;
+  const data = {
+    id: id ? +id : Date.now(),
+    name, price, stock,
+    cat: document.getElementById('p_cat').value,
+    tag: document.getElementById('p_tag').value.trim(),
+    sizes, colors,
+    desc: document.getElementById('p_desc').value.trim(),
+    img: editImgData || (id ? (list.find(p=>p.id===+id)?.img||'') : '')
+  };
+  if(id){
+    const idx = list.findIndex(p=>p.id===+id);
+    list[idx] = data;
+  } else {
+    list.push(data);
+  }
+  setProducts(list);
+  resetForm();
+  renderProducts();
+}
+
+function editProduct(id){
+  const p = getProducts().find(x=>x.id===id);
+  if(!p) return;
+  document.getElementById('formTitle').textContent = 'Edit product';
+  document.getElementById('p_id').value = p.id;
+  document.getElementById('p_name').value = p.name;
+  document.getElementById('p_cat').value = p.cat;
+  document.getElementById('p_price').value = p.price;
+  document.getElementById('p_stock').value = p.stock;
+  document.getElementById('p_tag').value = p.tag||'';
+  document.getElementById('p_sizes').value = p.sizes.join(', ');
+  document.getElementById('p_colors').value = p.colors.join(', ');
+  document.getElementById('p_desc').value = p.desc||'';
+  document.getElementById('p_imgPreview').style.backgroundImage = p.img ? `url(${p.img})` : '';
+  editImgData = '';
+  document.getElementById('cancelEdit').style.display = 'inline-block';
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function deleteProduct(id){
+  if(!confirm('Delete this product?')) return;
+  setProducts(getProducts().filter(p=>p.id!==id));
+  renderProducts();
+}
+
+function resetForm(){
+  document.getElementById('formTitle').textContent = 'Add a product';
+  ['p_id','p_name','p_price','p_stock','p_tag','p_sizes','p_colors','p_desc'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('p_imgPreview').style.backgroundImage='';
+  document.getElementById('cancelEdit').style.display='none';
+  editImgData='';
+}
+
+function getOrders(){ return JSON.parse(localStorage.getItem('aw_orders')||'[]'); }
+function setOrders(list){ localStorage.setItem('aw_orders', JSON.stringify(list)); }
+
+function renderOrders(){
+  const orders = getOrders();
+  const wrap = document.getElementById('orderList');
+  if(orders.length===0){ wrap.innerHTML = '<div class="empty">No orders yet.</div>'; return; }
+  wrap.innerHTML = orders.map(o=>`
+    <div class="order-card">
+      <div class="order-top">
+        <span class="order-id">${o.id}</span>
+        <span class="badge ${o.status==='delivered'?'delivered':(o.status==='awaiting_payment'?'pending':'confirmed')}">${o.status==='awaiting_payment'?'Awaiting payment':(o.status==='confirmed'?'Confirmed':'Delivered')}</span>
+      </div>
+      <div class="order-meta">
+        ${o.name} · ${o.phone} · ${o.city}<br>
+        ${o.address}<br>
+        Payment: ${o.payMethod==='online'?'Online transfer':'Cash on delivery'}${o.notes?('<br>Notes: '+o.notes):''}
+      </div>
+      <div class="order-items">
+        ${o.items.map(i=>`<div>${i.qty}x ${i.name} — ${i.size}, ${i.color} — Rs. ${(i.price*i.qty).toLocaleString()}</div>`).join('')}
+        <div style="font-weight:600; margin-top:6px;">Total: Rs. ${o.total.toLocaleString()}</div>
+      </div>
+      <div class="order-actions">
+        ${o.status==='awaiting_payment'?`<button class="primary" onclick="updateStatus('${o.id}','confirmed')">Mark payment received</button>`:''}
+        ${o.status!=='delivered'?`<button class="wa" onclick="notifyDelivered('${o.id}')">Mark delivered + notify customer</button>`:''}
+        <button onclick="deleteOrder('${o.id}')" style="color:var(--clay); border-color:var(--clay);">Delete</button>
+      </div>
+    </div>`).join('');
+}
+
+function updateStatus(id, status){
+  const orders = getOrders();
+  const o = orders.find(x=>x.id===id);
+  if(o) o.status = status;
+  setOrders(orders);
+  renderOrders();
+}
+
+function notifyDelivered(id){
+  const orders = getOrders();
+  const o = orders.find(x=>x.id===id);
+  if(!o) return;
+  o.status = 'delivered';
+  setOrders(orders);
+  renderOrders();
+  const msg = `Hi ${o.name}, your Azmees Wardrobe order ${o.id} has been delivered. Thank you for shopping with us! We'd love to see you again.`;
+  window.open(`https://wa.me/${o.phone.replace(/[^0-9]/g,'')}?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+function deleteOrder(id){
+  if(!confirm('Delete this order record?')) return;
+  setOrders(getOrders().filter(o=>o.id!==id));
+  renderOrders();
+}
+
+if(localStorage.getItem('aw_admin_ok')==='1') init();
+</script>
+</body>
+</html>
