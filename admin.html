@@ -6,6 +6,7 @@
 <title>Azmees Wardrobe — Admin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root{ --stone:#EDE6D8; --ink:#221C14; --olive:#5B6B3D; --clay:#A6491F; --mustard:#D9A441; --line:rgba(34,28,20,0.15); --white:#fff; }
   *{box-sizing:border-box; margin:0; padding:0;}
@@ -186,30 +187,39 @@ function getCategories(){
 }
 function setCategories(list){ localStorage.setItem('aw_categories', JSON.stringify(list)); }
 
-function saveCategory(){
+const supabaseClient = supabase.createClient(
+  'https://yfgyezzncxjnfypnfrci.supabase.co',
+  'sb_publishable_HXHEKKJLf_I0Gm3DSxFyLA_TGfZEjl8'
+);
+
+async function getCategories(){
+  const { data, error } = await supabaseClient.from('categories').select('*').order('id');
+  if(error){ console.error(error); return []; }
+  return data.map(c=>c.name);
+}
+
+async function saveCategory(){
   const name = document.getElementById('c_name').value.trim();
   if(!name) return;
-  const list = getCategories();
-  if(list.includes(name)){ alert('Category already exists.'); return; }
-  list.push(name);
-  setCategories(list);
+  const { error } = await supabaseClient.from('categories').insert({name});
+  if(error){ alert(error.message.includes('duplicate') ? 'Category already exists.' : error.message); return; }
   document.getElementById('c_name').value='';
-  renderCategories();
-  populateCategoryDropdown();
+  await renderCategories();
+  await populateCategoryDropdown();
 }
 
-function deleteCategory(name){
-  const inUse = getProducts().some(p=>p.cat===name);
-  if(inUse){ alert('Move or delete products in this category first.'); return; }
+async function deleteCategory(name){
+  const products = await getProducts();
+  if(products.some(p=>p.cat===name)){ alert('Move or delete products in this category first.'); return; }
   if(!confirm(`Delete category "${name}"?`)) return;
-  setCategories(getCategories().filter(c=>c!==name));
-  renderCategories();
-  populateCategoryDropdown();
+  await supabaseClient.from('categories').delete().eq('name', name);
+  await renderCategories();
+  await populateCategoryDropdown();
 }
 
-function renderCategories(){
-  const cats = getCategories();
-  const products = getProducts();
+async function renderCategories(){
+  const cats = await getCategories();
+  const products = await getProducts();
   document.getElementById('categoryTable').innerHTML = cats.map(c=>`
     <tr>
       <td>${c}</td>
@@ -218,17 +228,21 @@ function renderCategories(){
     </tr>`).join('') || `<tr><td colspan="3" class="empty">No categories yet.</td></tr>`;
 }
 
-function populateCategoryDropdown(){
-  document.getElementById('p_cat').innerHTML = getCategories().map(c=>`<option>${c}</option>`).join('');
+async function populateCategoryDropdown(){
+  const cats = await getCategories();
+  document.getElementById('p_cat').innerHTML = cats.map(c=>`<option>${c}</option>`).join('');
 }
 
-function getProducts(){ return JSON.parse(localStorage.getItem('aw_products')||'[]'); }
-function setProducts(list){ localStorage.setItem('aw_products', JSON.stringify(list)); }
+async function getProducts(){
+  const { data, error } = await supabaseClient.from('products').select('*').order('created_at', {ascending:false});
+  if(error){ console.error(error); return []; }
+  return data;
+}
 
-function init(){
-  renderCategories();
-  populateCategoryDropdown();
-  renderProducts();
+async function init(){
+  await renderCategories();
+  await populateCategoryDropdown();
+  await renderProducts();
   document.getElementById('p_img').onchange = (e)=>{
     const file = e.target.files[0];
     if(!file) return;
@@ -238,8 +252,8 @@ function init(){
   };
 }
 
-function renderProducts(){
-  const list = getProducts();
+async function renderProducts(){
+  const list = await getProducts();
   document.getElementById('productTable').innerHTML = list.map(p=>`
     <tr>
       <td><div class="thumb" style="${p.img?`background-image:url('${p.img}')`:''}"></div></td>
@@ -257,7 +271,7 @@ function renderProducts(){
     </tr>`).join('') || `<tr><td colspan="7" class="empty">No products yet — add your first one above.</td></tr>`;
 }
 
-function saveProduct(){
+async function saveProduct(){
   const name = document.getElementById('p_name').value.trim();
   const price = +document.getElementById('p_price').value;
   const stock = +document.getElementById('p_stock').value;
@@ -267,30 +281,31 @@ function saveProduct(){
     alert('Fill name, price, stock, at least one size and one color.');
     return;
   }
-  const list = getProducts();
   const id = document.getElementById('p_id').value;
   const data = {
-    id: id ? +id : Date.now(),
     name, price, stock,
     cat: document.getElementById('p_cat').value,
     tag: document.getElementById('p_tag').value.trim(),
     sizes, colors,
-    desc: document.getElementById('p_desc').value.trim(),
-    img: editImgData || (id ? (list.find(p=>p.id===+id)?.img||'') : '')
+    description: document.getElementById('p_desc').value.trim(),
   };
+  if(editImgData) data.img = editImgData;
+
   if(id){
-    const idx = list.findIndex(p=>p.id===+id);
-    list[idx] = data;
+    const { error } = await supabaseClient.from('products').update(data).eq('id', id);
+    if(error){ alert(error.message); return; }
   } else {
-    list.push(data);
+    data.img = editImgData || '';
+    const { error } = await supabaseClient.from('products').insert(data);
+    if(error){ alert(error.message); return; }
   }
-  setProducts(list);
   resetForm();
-  renderProducts();
+  await renderProducts();
 }
 
-function editProduct(id){
-  const p = getProducts().find(x=>x.id===id);
+async function editProduct(id){
+  const list = await getProducts();
+  const p = list.find(x=>x.id===id);
   if(!p) return;
   document.getElementById('formTitle').textContent = 'Edit product';
   document.getElementById('p_id').value = p.id;
@@ -301,17 +316,17 @@ function editProduct(id){
   document.getElementById('p_tag').value = p.tag||'';
   document.getElementById('p_sizes').value = p.sizes.join(', ');
   document.getElementById('p_colors').value = p.colors.join(', ');
-  document.getElementById('p_desc').value = p.desc||'';
+  document.getElementById('p_desc').value = p.description||'';
   document.getElementById('p_imgPreview').style.backgroundImage = p.img ? `url(${p.img})` : '';
   editImgData = '';
   document.getElementById('cancelEdit').style.display = 'inline-block';
   window.scrollTo({top:0, behavior:'smooth'});
 }
 
-function deleteProduct(id){
+async function deleteProduct(id){
   if(!confirm('Delete this product?')) return;
-  setProducts(getProducts().filter(p=>p.id!==id));
-  renderProducts();
+  await supabaseClient.from('products').delete().eq('id', id);
+  await renderProducts();
 }
 
 function resetForm(){
@@ -322,11 +337,14 @@ function resetForm(){
   editImgData='';
 }
 
-function getOrders(){ return JSON.parse(localStorage.getItem('aw_orders')||'[]'); }
-function setOrders(list){ localStorage.setItem('aw_orders', JSON.stringify(list)); }
+async function getOrders(){
+  const { data, error } = await supabaseClient.from('orders').select('*').order('created_at', {ascending:false});
+  if(error){ console.error(error); return []; }
+  return data;
+}
 
-function renderOrders(){
-  const orders = getOrders();
+async function renderOrders(){
+  const orders = await getOrders();
   const wrap = document.getElementById('orderList');
   if(orders.length===0){ wrap.innerHTML = '<div class="empty">No orders yet.</div>'; return; }
   wrap.innerHTML = orders.map(o=>`
@@ -338,11 +356,11 @@ function renderOrders(){
       <div class="order-meta">
         ${o.name} · ${o.phone} · ${o.city}<br>
         ${o.address}<br>
-        Payment: ${o.payMethod==='online'?'Online transfer':'Cash on delivery'}${o.notes?('<br>Notes: '+o.notes):''}
+        Payment: ${o.pay_method==='online'?'Online transfer':'Cash on delivery'}${o.notes?('<br>Notes: '+o.notes):''}
       </div>
       <div class="order-items">
         ${o.items.map(i=>`<div>${i.qty}x ${i.name} — ${i.size}, ${i.color} — Rs. ${(i.price*i.qty).toLocaleString()}</div>`).join('')}
-        <div style="font-weight:600; margin-top:6px;">Total: Rs. ${o.total.toLocaleString()}</div>
+        <div style="font-weight:600; margin-top:6px;">Total: Rs. ${Number(o.total).toLocaleString()}</div>
       </div>
       <div class="order-actions">
         ${o.status==='awaiting_payment'?`<button class="primary" onclick="updateStatus('${o.id}','confirmed')">Mark payment received</button>`:''}
@@ -352,29 +370,25 @@ function renderOrders(){
     </div>`).join('');
 }
 
-function updateStatus(id, status){
-  const orders = getOrders();
-  const o = orders.find(x=>x.id===id);
-  if(o) o.status = status;
-  setOrders(orders);
-  renderOrders();
+async function updateStatus(id, status){
+  await supabaseClient.from('orders').update({status}).eq('id', id);
+  await renderOrders();
 }
 
-function notifyDelivered(id){
-  const orders = getOrders();
+async function notifyDelivered(id){
+  const orders = await getOrders();
   const o = orders.find(x=>x.id===id);
   if(!o) return;
-  o.status = 'delivered';
-  setOrders(orders);
-  renderOrders();
+  await supabaseClient.from('orders').update({status:'delivered'}).eq('id', id);
+  await renderOrders();
   const msg = `Hi ${o.name}, your Azmees Wardrobe order ${o.id} has been delivered. Thank you for shopping with us! We'd love to see you again.`;
   window.open(`https://wa.me/${o.phone.replace(/[^0-9]/g,'')}?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
-function deleteOrder(id){
+async function deleteOrder(id){
   if(!confirm('Delete this order record?')) return;
-  setOrders(getOrders().filter(o=>o.id!==id));
-  renderOrders();
+  await supabaseClient.from('orders').delete().eq('id', id);
+  await renderOrders();
 }
 
 if(localStorage.getItem('aw_admin_ok')==='1') init();
