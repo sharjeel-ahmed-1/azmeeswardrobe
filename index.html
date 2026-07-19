@@ -139,11 +139,8 @@
   <div class="nav">
     <div class="logo">Azmees Wardrobe</div>
     <nav class="navlinks">
-      <a href="#shop">T-Shirts</a>
-      <a href="#shop">Ladies Suits</a>
-      <a href="#shop">Tracksuits</a>
-      <a href="#shop">Shorts</a>
-      <a href="#shop">Trousers</a>
+      <a href="#shop">Shop</a>
+      <a href="https://wa.me/923338934993" target="_blank">WhatsApp</a>
     </nav>
     <button class="cart-btn" id="cartOpenBtn">Cart <span class="cart-count" id="cartCount" style="display:none;">0</span></button>
   </div>
@@ -178,8 +175,8 @@
       <h4>Azmees Wardrobe</h4>
       <p style="font-size:14px; color:rgba(34,28,20,0.7); max-width:280px;">Everyday clothing for men and women, sourced and stitched with care. Based in Islamabad.</p>
     </div>
-    <div><h4>Shop</h4><a href="#shop">T-Shirts</a><a href="#shop">Ladies Suits</a><a href="#shop">Tracksuits</a></div>
-    <div><h4>Shop</h4><a href="#shop">Shorts</a><a href="#shop">Trousers</a></div>
+    <div><h4>Shop</h4><div id="footerCats"></div></div>
+    <div><h4>Store hours</h4><p style="font-size:14px; color:rgba(34,28,20,0.7);">Message us on WhatsApp anytime — we'll reply during store hours.</p></div>
     <div><h4>Contact</h4><a href="https://wa.me/923338934993">WhatsApp: 0333-8934993</a><a href="https://wa.me/923365573330">WhatsApp: 0336-5573330</a><a href="#">Lethrar Road, First Floor, Taramri Chowk (infront of Pakistan Halls), Islamabad</a></div>
   </div>
   <div class="foot-bottom">© 2026 Azmees Wardrobe. All rights reserved.</div>
@@ -237,6 +234,7 @@ function renderChips(cats){
       renderGrid(chip.dataset.cat);
     };
   });
+  document.getElementById('footerCats').innerHTML = cats.map(c=>`<a href="#shop">${c}</a>`).join('');
 }
 
 async function init(){
