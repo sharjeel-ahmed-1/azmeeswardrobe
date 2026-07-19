@@ -51,7 +51,8 @@
   .card{background:var(--white); border:1px solid var(--line); border-radius:4px; overflow:hidden; opacity:0; transform:translateY(16px); transition:transform .25s, box-shadow .25s;}
   .card.show{animation:fadeUp .5s ease forwards;}
   .card:hover{transform:translateY(-4px); box-shadow:0 10px 24px rgba(34,28,20,0.08);}
-  .card-img{aspect-ratio:3/4; background:linear-gradient(135deg,#f4f0e8,#e6ddc9); display:flex; align-items:center; justify-content:center; font-size:12px; color:rgba(34,28,20,0.35); position:relative;}
+  .card-img{aspect-ratio:3/4; background:linear-gradient(135deg,#f4f0e8,#e6ddc9); display:flex; align-items:center; justify-content:center; font-size:12px; color:rgba(34,28,20,0.35); position:relative; overflow:hidden; transition:transform .4s ease;}
+  .card:hover .card-img{transform:scale(1.04);}
   .tag{position:absolute; top:10px; left:10px; background:var(--mustard); color:var(--ink); font-size:11px; padding:3px 8px; border-radius:2px; font-weight:600;}
   .card-body{padding:14px 16px 18px;}
   .card-body h3{font-size:15px; font-weight:500; font-family:'Inter'; margin-bottom:4px;}
@@ -63,7 +64,7 @@
   .add-btn:hover{background:var(--olive);}
   .add-btn.added{background:var(--olive);}
 
-  @media(max-width:900px){ .grid{grid-template-columns:repeat(2,1fr);} .hero h1{font-size:34px;} }
+  @media(max-width:900px){ .grid{grid-template-columns:repeat(2,1fr);} .hero h1{font-size:34px;} #about > div{grid-template-columns:1fr !important;} #about > div > div:first-child{height:260px !important; margin-bottom:20px;} }
 
   .strip{background:var(--ink); color:var(--stone); padding:56px 32px; text-align:center; margin-top:20px;}
   .strip h2{color:var(--stone); font-size:26px; margin-bottom:12px;}
@@ -141,6 +142,7 @@
     <div class="logo">Azmees Wardrobe</div>
     <nav class="navlinks">
       <a href="#shop">Shop</a>
+      <a href="#about">About</a>
       <a href="https://wa.me/923338934993" target="_blank">WhatsApp</a>
     </nav>
     <button class="cart-btn" id="cartOpenBtn">Cart <span class="cart-count" id="cartCount" style="display:none;">0</span></button>
@@ -162,6 +164,20 @@
   </div>
   <input type="text" id="searchBox" placeholder="Search products..." style="width:100%; padding:12px 16px; border:1px solid var(--line); border-radius:4px; font-size:14px; font-family:inherit; background:var(--white); margin-bottom:24px;">
   <div class="grid" id="productGrid"></div>
+</section>
+
+<section class="section wrap" id="about" style="padding-top:20px;">
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:40px; align-items:center;">
+    <div style="position:relative; height:380px;">
+      <div style="position:absolute; top:0; left:0; width:70%; height:75%; border-radius:8px; background:linear-gradient(135deg,#f4f0e8,#e6ddc9); box-shadow:0 14px 30px rgba(34,28,20,0.15);"></div>
+      <div style="position:absolute; bottom:0; right:0; width:60%; height:65%; border-radius:8px; background:linear-gradient(135deg,#e8dcc4,#d9c9a3); box-shadow:0 14px 30px rgba(34,28,20,0.18); border:6px solid var(--stone);"></div>
+    </div>
+    <div>
+      <div class="eyebrow" style="opacity:1; animation:none;">About us</div>
+      <h2 style="font-size:32px; margin:10px 0 16px;">Clothing picked for everyday life, not just the rack.</h2>
+      <p style="font-size:15px; color:rgba(34,28,20,0.7); line-height:1.7;">Azmees Wardrobe is a small Islamabad-based store bringing you honest, everyday basics — t-shirts, ladies suits, tracksuits, shorts and trousers — at fair prices. Every order is packed by hand and confirmed with you directly on WhatsApp, no middlemen, no guesswork.</p>
+    </div>
+  </div>
 </section>
 
 <section class="strip">
@@ -194,6 +210,10 @@
     <div class="subtotal-row"><span>Subtotal</span><strong id="subtotal">Rs. 0</strong></div>
     <button class="checkout-btn" id="checkoutBtn" disabled>Checkout</button>
   </div>
+</div>
+
+<div class="modal-overlay" id="detailOverlay">
+  <div class="modal" id="detailModal" style="width:640px;"></div>
 </div>
 
 <div class="modal-overlay" id="checkoutOverlay">
@@ -269,9 +289,9 @@ function renderGrid(filter){
     const img = imageFor(p, sel[p.id].color);
     return `
     <div class="card" data-id="${p.id}" style="${oos?'opacity:0.55;':''}">
-      <div class="card-img" id="img_${p.id}" ${img?`style="background-image:url('${img}'); background-size:cover; background-position:center; cursor:zoom-in;"`:''}>${oos?'<span class="tag" style="background:var(--ink); color:var(--stone);">Out of stock</span>':(p.tag?`<span class="tag">${p.tag}</span>`:'')}${img?'':'Product photo'}</div>
+      <div class="card-img" id="img_${p.id}" data-detail="${p.id}" ${img?`style="background-image:url('${img}'); background-size:cover; background-position:center; cursor:pointer;"`:''}>${oos?'<span class="tag" style="background:var(--ink); color:var(--stone);">Out of stock</span>':(p.tag?`<span class="tag">${p.tag}</span>`:'')}${img?'':'Product photo'}</div>
       <div class="card-body">
-        <h3>${p.name}</h3>
+        <h3 data-detail="${p.id}" style="cursor:pointer;">${p.name}</h3>
         ${p.description?`<div style="font-size:12px;color:rgba(34,28,20,0.55);margin-bottom:8px;">${p.description}</div>`:''}
         <div class="price">Rs. ${p.price.toLocaleString()}</div>
         <div class="opt-row" data-type="size">
@@ -307,13 +327,8 @@ function renderGrid(filter){
       if(img){ imgEl.style.backgroundImage = `url('${img}')`; imgEl.style.backgroundSize='cover'; imgEl.style.backgroundPosition='center'; imgEl.style.cursor='zoom-in'; }
     };
   });
-  grid.querySelectorAll('.card-img').forEach(el=>{
-    el.onclick = ()=>{
-      const id = +el.closest('.card').dataset.id;
-      const p = products.find(x=>x.id===id);
-      const img = imageFor(p, sel[id].color);
-      if(img) openLightbox(img);
-    };
+  grid.querySelectorAll('[data-detail]').forEach(el=>{
+    el.onclick = ()=> openProductDetail(+el.dataset.detail);
   });
   grid.querySelectorAll('[data-add]').forEach(btn=>{
     btn.onclick = ()=>{
@@ -333,6 +348,77 @@ function renderGrid(filter){
 function imageFor(p, color){
   if(p.images && p.images[color]) return p.images[color];
   return p.img || '';
+}
+
+const detailOverlay = document.getElementById('detailOverlay');
+const detailModal = document.getElementById('detailModal');
+let detailQty = 1;
+
+function openProductDetail(id){
+  const p = products.find(x=>x.id===id);
+  if(!p) return;
+  detailQty = 1;
+  if(!sel[id]) sel[id] = {size:p.sizes[0], color:p.colors[0]};
+  renderDetail(p);
+  detailOverlay.classList.add('open');
+}
+function closeDetail(){ detailOverlay.classList.remove('open'); }
+
+function renderDetail(p){
+  const oos = p.stock <= 0;
+  const activeColor = sel[p.id].color;
+  const mainImg = imageFor(p, activeColor);
+  detailModal.innerHTML = `
+    <div style="display:flex; justify-content:flex-end;"><button onclick="closeDetail()" style="font-size:22px; line-height:1;">&times;</button></div>
+    <div style="${mainImg?`background-image:url('${mainImg}');background-size:cover;background-position:center;`:'background:linear-gradient(135deg,#f4f0e8,#e6ddc9);display:flex;align-items:center;justify-content:center;color:rgba(34,28,20,0.35);font-size:13px;'} aspect-ratio:4/3; border-radius:4px; cursor:${mainImg?'zoom-in':'default'};" id="detailMainImg" ${mainImg?`onclick="openLightbox('${mainImg}')"`:''}>${mainImg?'':'Product photo'}</div>
+    <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
+      ${p.colors.map(c=>{
+        const thumb = imageFor(p, c);
+        return `<div class="detail-thumb ${c===activeColor?'active':''}" data-thumb-color="${c}" style="width:56px;height:56px;border-radius:4px;border:2px solid ${c===activeColor?'var(--olive)':'var(--line)'};cursor:pointer;${thumb?`background-image:url('${thumb}');background-size:cover;background-position:center;`:'background:#f4f0e8;'}"></div>`;
+      }).join('')}
+    </div>
+    <h2 style="margin-top:20px; font-size:24px;">${p.name}</h2>
+    ${p.description?`<p style="font-size:14px; color:rgba(34,28,20,0.65); margin-top:6px;">${p.description}</p>`:''}
+    <div class="price" style="font-size:20px; margin-top:10px;">Rs. ${p.price.toLocaleString()}</div>
+    <div style="margin-top:16px;"><label style="font-size:13px; font-weight:500; display:block; margin-bottom:6px;">Size</label>
+      <div class="opt-row">${p.sizes.map(s=>`<button class="opt ${sel[p.id].size===s?'sel':''}" data-detail-size="${s}">${s}</button>`).join('')}</div>
+    </div>
+    <div style="margin-top:14px;"><label style="font-size:13px; font-weight:500; display:block; margin-bottom:6px;">Color: ${activeColor}</label>
+      <div class="opt-row">${p.colors.map(c=>`<button class="opt ${c===activeColor?'sel':''}" data-detail-color="${c}">${c}</button>`).join('')}</div>
+    </div>
+    <div style="display:flex; align-items:center; gap:16px; margin-top:20px;">
+      <div style="display:flex; align-items:center; gap:10px; border:1px solid var(--line); border-radius:4px; padding:6px 12px;">
+        <button data-qty-dec style="font-size:16px;">−</button>
+        <span id="detailQtyVal" style="min-width:20px; text-align:center;">${detailQty}</span>
+        <button data-qty-inc style="font-size:16px;">+</button>
+      </div>
+      <button class="add-btn" id="detailAddBtn" style="flex:1;" ${oos?'disabled style="opacity:0.5;cursor:not-allowed;"':''}>${oos?'Out of stock':'Add to cart'}</button>
+    </div>
+  `;
+  detailModal.querySelectorAll('[data-thumb-color]').forEach(el=>{
+    el.onclick = ()=>{ sel[p.id].color = el.dataset.thumbColor; renderDetail(p); };
+  });
+  detailModal.querySelectorAll('[data-detail-color]').forEach(el=>{
+    el.onclick = ()=>{ sel[p.id].color = el.dataset.detailColor; renderDetail(p); };
+  });
+  detailModal.querySelectorAll('[data-detail-size]').forEach(el=>{
+    el.onclick = ()=>{ sel[p.id].size = el.dataset.detailSize; renderDetail(p); };
+  });
+  const dec = detailModal.querySelector('[data-qty-dec]');
+  const inc = detailModal.querySelector('[data-qty-inc]');
+  if(dec) dec.onclick = ()=>{ if(detailQty>1) detailQty--; document.getElementById('detailQtyVal').textContent = detailQty; };
+  if(inc) inc.onclick = ()=>{ detailQty++; document.getElementById('detailQtyVal').textContent = detailQty; };
+  const addBtn = document.getElementById('detailAddBtn');
+  if(addBtn && !oos){
+    addBtn.onclick = ()=>{
+      const choice = sel[p.id];
+      const existing = cart.find(c=>c.id===p.id && c.size===choice.size && c.color===choice.color);
+      if(existing){ existing.qty += detailQty; } else { cart.push({id:p.id, name:p.name, price:p.price, size:choice.size, color:choice.color, qty:detailQty}); }
+      renderCart();
+      showToast(p.name + ' added to cart');
+      closeDetail();
+    };
+  }
 }
 
 function openLightbox(src){
@@ -392,7 +478,8 @@ function openDrawer(){ drawer.classList.add('open'); overlay.classList.add('open
 function closeDrawer(){ drawer.classList.remove('open'); overlay.classList.remove('open'); }
 document.getElementById('cartOpenBtn').onclick = openDrawer;
 document.getElementById('cartCloseBtn').onclick = closeDrawer;
-overlay.onclick = ()=>{ closeDrawer(); closeCheckout(); };
+overlay.onclick = ()=>{ closeDrawer(); closeCheckout(); closeDetail(); };
+detailOverlay.onclick = (e)=>{ if(e.target===detailOverlay) closeDetail(); };
 
 const checkoutOverlay = document.getElementById('checkoutOverlay');
 const checkoutModal = document.getElementById('checkoutModal');
@@ -495,6 +582,17 @@ function placeOrder(name, phone, city, address, notes, total){
 document.getElementById('checkoutBtn').onclick = ()=>{ closeDrawer(); openCheckout(); };
 
 init();
+
+const aboutEl = document.getElementById('about');
+if(aboutEl){
+  aboutEl.style.opacity = '0';
+  aboutEl.style.transform = 'translateY(24px)';
+  aboutEl.style.transition = 'opacity .7s ease, transform .7s ease';
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{ if(e.isIntersecting){ aboutEl.style.opacity='1'; aboutEl.style.transform='translateY(0)'; io.disconnect(); } });
+  }, {threshold:0.2});
+  io.observe(aboutEl);
+}
 </script>
 </body>
 </html>
