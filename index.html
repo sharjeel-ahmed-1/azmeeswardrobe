@@ -162,13 +162,14 @@
     <h2>Shop the collection</h2>
     <span id="itemCount">10 items</span>
   </div>
+  <input type="text" id="searchBox" placeholder="Search products..." style="width:100%; padding:12px 16px; border:1px solid var(--line); border-radius:4px; font-size:14px; font-family:inherit; background:var(--white); margin-bottom:24px;">
   <div class="grid" id="productGrid"></div>
 </section>
 
 <section class="strip">
   <h2>Not sure about sizing?</h2>
   <p>Message us on WhatsApp — we'll help you pick the right fit and confirm your order directly.</p>
-  <a href="https://wa.me/923000000000" target="_blank" class="btn">Message on WhatsApp</a>
+  <a href="https://wa.me/923338934993" target="_blank" class="btn">Message on WhatsApp</a>
 </section>
 
 <footer class="wrap">
@@ -179,7 +180,7 @@
     </div>
     <div><h4>Shop</h4><a href="#shop">T-Shirts</a><a href="#shop">Ladies Suits</a><a href="#shop">Tracksuits</a></div>
     <div><h4>Shop</h4><a href="#shop">Shorts</a><a href="#shop">Trousers</a></div>
-    <div><h4>Contact</h4><a href="https://wa.me/923000000000">WhatsApp order</a><a href="#">Taramri Chowk, Islamabad</a></div>
+    <div><h4>Contact</h4><a href="https://wa.me/923338934993">WhatsApp: 0333-8934993</a><a href="https://wa.me/923365573330">WhatsApp: 0336-5573330</a><a href="#">Lethrar Road, First Floor, Taramri Chowk (infront of Pakistan Halls), Islamabad</a></div>
   </div>
   <div class="foot-bottom">© 2026 Azmees Wardrobe. All rights reserved.</div>
 </footer>
@@ -214,7 +215,7 @@ let cart = [];
 const sel = {};
 
 async function loadProducts(){
-  const { data, error } = await supabaseClient.from('products').select('*').gt('stock', 0).order('created_at', {ascending:false});
+  const { data, error } = await supabaseClient.from('products').select('*').order('created_at', {ascending:false});
   if(error){ console.error(error); return []; }
   return data;
 }
@@ -244,17 +245,27 @@ async function init(){
   renderChips(cats);
   renderGrid('all');
   renderCart();
+  document.getElementById('searchBox').addEventListener('input', (e)=>{
+    currentSearch = e.target.value.trim().toLowerCase();
+    renderGrid(currentFilter);
+  });
 }
 
+let currentFilter = 'all';
+let currentSearch = '';
+
 function renderGrid(filter){
+  currentFilter = filter;
   const grid = document.getElementById('productGrid');
-  const list = filter==='all' ? products : products.filter(p=>p.cat===filter);
+  let list = filter==='all' ? products : products.filter(p=>p.cat===filter);
+  if(currentSearch) list = list.filter(p=>p.name.toLowerCase().includes(currentSearch));
   document.getElementById('itemCount').textContent = list.length + ' items';
   grid.innerHTML = list.map(p=>{
     sel[p.id] = sel[p.id] || {size:p.sizes[0], color:p.colors[0]};
+    const oos = p.stock <= 0;
     return `
-    <div class="card" data-id="${p.id}">
-      <div class="card-img" ${p.img?`style="background-image:url('${p.img}'); background-size:cover; background-position:center;"`:''}>${p.tag?`<span class="tag">${p.tag}</span>`:''}${p.img?'':'Product photo'}</div>
+    <div class="card" data-id="${p.id}" style="${oos?'opacity:0.55;':''}">
+      <div class="card-img" ${p.img?`style="background-image:url('${p.img}'); background-size:cover; background-position:center;"`:''}>${oos?'<span class="tag" style="background:var(--ink); color:var(--stone);">Out of stock</span>':(p.tag?`<span class="tag">${p.tag}</span>`:'')}${p.img?'':'Product photo'}</div>
       <div class="card-body">
         <h3>${p.name}</h3>
         ${p.description?`<div style="font-size:12px;color:rgba(34,28,20,0.55);margin-bottom:8px;">${p.description}</div>`:''}
@@ -265,7 +276,7 @@ function renderGrid(filter){
         <div class="opt-row" data-type="color">
           ${p.colors.map(c=>`<button class="opt ${sel[p.id].color===c?'sel':''}" data-color="${c}">${c}</button>`).join('')}
         </div>
-        <button class="add-btn" data-add="${p.id}">Add to cart</button>
+        <button class="add-btn" data-add="${p.id}" ${oos?'disabled style="opacity:0.5;cursor:not-allowed;"':''}>${oos?'Out of stock':'Add to cart'}</button>
       </div>
     </div>`;
   }).join('');
@@ -358,10 +369,10 @@ overlay.onclick = ()=>{ closeDrawer(); closeCheckout(); };
 const checkoutOverlay = document.getElementById('checkoutOverlay');
 const checkoutModal = document.getElementById('checkoutModal');
 let payMethod = 'cod';
+let fulfillMethod = 'delivery';
 
 function openCheckout(){
   const subtotal = cart.reduce((a,c)=>a+c.price*c.qty,0);
-  const delivery = subtotal >= 3000 ? 0 : 200;
   checkoutModal.innerHTML = `
     <h3>Checkout</h3>
     <div class="sub">Fill your details — we'll confirm the order on WhatsApp.</div>
@@ -370,7 +381,16 @@ function openCheckout(){
       <div class="field"><label>Phone number</label><input id="cf_phone" placeholder="03xx-xxxxxxx"></div>
       <div class="field"><label>City</label><input id="cf_city" placeholder="Islamabad"></div>
     </div>
-    <div class="field"><label>Delivery address</label><textarea id="cf_address" rows="2" placeholder="House no, street, area, landmark"></textarea></div>
+    <div class="field"><label>How will you get your order?</label>
+      <div class="pay-options">
+        <button type="button" class="pay-opt sel" data-fulfill="delivery">Delivery</button>
+        <button type="button" class="pay-opt" data-fulfill="pickup">Pickup from store</button>
+      </div>
+    </div>
+    <div class="field" id="addressField"><label>Delivery address</label><textarea id="cf_address" rows="2" placeholder="House no, street, area, landmark"></textarea>
+      <div style="font-size:12px; color:rgba(34,28,20,0.6); margin-top:6px;">Delivery charge depends on your location — send your exact location on WhatsApp after ordering and we'll confirm the charge.</div>
+    </div>
+    <div class="field" id="pickupNote" style="display:none; font-size:12px; color:rgba(34,28,20,0.65); background:var(--stone); padding:10px 12px; border-radius:3px;">Pickup from: Lethrar Road, First Floor, Taramri Chowk (infront of Pakistan Halls), Islamabad. We'll message you on WhatsApp once it's ready.</div>
     <div class="field"><label>Payment method</label>
       <div class="pay-options">
         <button type="button" class="pay-opt sel" data-pay="cod">Cash on delivery</button>
@@ -381,14 +401,23 @@ function openCheckout(){
     <div class="field"><label>Order notes (optional)</label><textarea id="cf_notes" rows="2" placeholder="Any special instructions"></textarea></div>
     <div class="order-summary">
       ${cart.map(c=>`<div class="row"><span>${c.name} (${c.size}, ${c.color}) × ${c.qty}</span><span>Rs. ${(c.price*c.qty).toLocaleString()}</span></div>`).join('')}
-      <div class="row"><span>Delivery</span><span>${delivery===0?'Free':'Rs. '+delivery}</span></div>
-      <div class="row total"><span>Total</span><span>Rs. ${(subtotal+delivery).toLocaleString()}</span></div>
+      <div class="row"><span>Delivery</span><span id="deliveryNote">Confirmed on WhatsApp</span></div>
+      <div class="row total"><span>Items total</span><span>Rs. ${subtotal.toLocaleString()}</span></div>
     </div>
     <button class="place-btn" id="placeOrderBtn">Place order</button>
   `;
-  checkoutModal.querySelectorAll('.pay-opt').forEach(b=>{
+  checkoutModal.querySelectorAll('[data-fulfill]').forEach(b=>{
     b.onclick = ()=>{
-      checkoutModal.querySelectorAll('.pay-opt').forEach(x=>x.classList.remove('sel'));
+      checkoutModal.querySelectorAll('[data-fulfill]').forEach(x=>x.classList.remove('sel'));
+      b.classList.add('sel'); fulfillMethod = b.dataset.fulfill;
+      document.getElementById('addressField').style.display = fulfillMethod==='delivery' ? 'block' : 'none';
+      document.getElementById('pickupNote').style.display = fulfillMethod==='pickup' ? 'block' : 'none';
+      document.getElementById('deliveryNote').textContent = fulfillMethod==='pickup' ? 'Free (pickup)' : 'Confirmed on WhatsApp';
+    };
+  });
+  checkoutModal.querySelectorAll('.pay-opt[data-pay]').forEach(b=>{
+    b.onclick = ()=>{
+      checkoutModal.querySelectorAll('.pay-opt[data-pay]').forEach(x=>x.classList.remove('sel'));
       b.classList.add('sel'); payMethod = b.dataset.pay;
       document.getElementById('onlineNote').style.display = payMethod==='online' ? 'block' : 'none';
     };
@@ -396,13 +425,13 @@ function openCheckout(){
   checkoutModal.querySelector('#placeOrderBtn').onclick = ()=>{
     const name = document.getElementById('cf_name').value.trim();
     const phone = document.getElementById('cf_phone').value.trim();
-    const address = document.getElementById('cf_address').value.trim();
+    const address = fulfillMethod==='pickup' ? 'Pickup from store' : document.getElementById('cf_address').value.trim();
     const city = document.getElementById('cf_city').value.trim();
-    if(!name || !phone || !address || !city){
-      showToast('Please fill name, phone, city and address');
+    if(!name || !phone || !city || (fulfillMethod==='delivery' && !address)){
+      showToast('Please fill in your details');
       return;
     }
-    placeOrder(name, phone, city, address, document.getElementById('cf_notes').value.trim(), subtotal+delivery);
+    placeOrder(name, phone, city, address, document.getElementById('cf_notes').value.trim(), subtotal);
   };
   checkoutOverlay.classList.add('open');
 }
@@ -412,11 +441,12 @@ function placeOrder(name, phone, city, address, notes, total){
   const orderId = 'AW-' + Math.floor(10000 + Math.random()*89999);
   const itemsText = cart.map(c=>`${c.qty}x ${c.name} (${c.size}, ${c.color})`).join('%0A');
   const payLabel = payMethod==='cod' ? 'Cash on delivery' : 'Online transfer';
-  const waMsg = `New order ${orderId}%0AName: ${name}%0APhone: ${phone}%0ACity: ${city}%0AAddress: ${address}%0A%0AItems:%0A${itemsText}%0A%0ATotal: Rs. ${total.toLocaleString()}%0APayment: ${payLabel}${payMethod==='online'?' (screenshot to follow)':''}${notes?('%0ANotes: '+notes):''}`;
+  const fulfillLabel = fulfillMethod==='pickup' ? 'Pickup from store' : `Delivery — ${address} (please share your exact location pin)`;
+  const waMsg = `New order ${orderId}%0AName: ${name}%0APhone: ${phone}%0ACity: ${city}%0A${fulfillLabel}%0A%0AItems:%0A${itemsText}%0A%0AItems total: Rs. ${total.toLocaleString()}%0APayment: ${payLabel}${payMethod==='online'?' (screenshot to follow)':''}${notes?('%0ANotes: '+notes):''}`;
 
   supabaseClient.from('orders').insert({
     id: orderId, name, phone, city, address, notes, total,
-    pay_method: payMethod,
+    pay_method: payMethod + (fulfillMethod==='pickup' ? ' (pickup)' : ' (delivery)'),
     items: cart.map(c=>({name:c.name, size:c.size, color:c.color, qty:c.qty, price:c.price})),
     status: payMethod==='online' ? 'awaiting_payment' : 'confirmed'
   }).then(({error})=>{ if(error) console.error(error); });
@@ -425,9 +455,9 @@ function placeOrder(name, phone, city, address, notes, total){
     <div class="success">
       <div class="check">&#10003;</div>
       <h3>Order received</h3>
-      <p>${payMethod==='online' ? 'Send this to WhatsApp, then attach your payment screenshot so we can confirm and start packing.' : 'Confirm it on WhatsApp so we can start packing right away.'}</p>
+      <p>${fulfillMethod==='delivery' ? "Send this to WhatsApp along with your location pin so we can confirm the delivery charge." : (payMethod==='online' ? 'Send this to WhatsApp, then attach your payment screenshot so we can confirm and start packing.' : 'Confirm it on WhatsApp so we can start packing right away.')}</p>
       <div class="order-id">${orderId}</div>
-      <a class="btn" style="opacity:1;animation:none;" href="https://wa.me/923000000000?text=${waMsg}" target="_blank">Confirm on WhatsApp</a>
+      <a class="btn" style="opacity:1;animation:none;" href="https://wa.me/923338934993?text=${waMsg}" target="_blank">Confirm on WhatsApp</a>
     </div>
   `;
   cart = [];
