@@ -6,6 +6,7 @@
 <title>Azmees Wardrobe</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root{
     --stone:#EDE6D8; --ink:#221C14; --olive:#5B6B3D; --clay:#A6491F; --mustard:#D9A441;
@@ -203,34 +204,28 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const DEFAULT_PRODUCTS = [
-  {id:1, name:"Classic crewneck tee", cat:"T-Shirts", price:1290, stock:20, desc:"Soft cotton crewneck, everyday fit.", sizes:["S","M","L","XL"], colors:["Black","White","Olive"], tag:"New", img:""},
-  {id:2, name:"Graphic print tee", cat:"T-Shirts", price:1450, stock:15, desc:"Printed cotton tee, relaxed fit.", sizes:["S","M","L","XL"], colors:["Black","Grey"], img:""},
-  {id:3, name:"Embroidered 2-piece suit", cat:"Ladies Suits", price:3450, stock:10, desc:"Hand-embroidered unstitched 2-piece.", sizes:["S","M","L"], colors:["Maroon","Navy","Mustard"], img:""},
-  {id:4, name:"Lawn printed 3-piece suit", cat:"Ladies Suits", price:4200, stock:8, desc:"Printed lawn, 3-piece with dupatta.", sizes:["S","M","L","XL"], colors:["Teal","Peach"], tag:"New", img:""},
-  {id:5, name:"Zip-up tracksuit set", cat:"Tracksuits", price:4100, stock:12, desc:"Zip-up jacket with matching trouser.", sizes:["S","M","L","XL"], colors:["Black","Navy"], tag:"Sale", img:""},
-  {id:6, name:"Fleece tracksuit", cat:"Tracksuits", price:3800, stock:9, desc:"Warm fleece-lined tracksuit set.", sizes:["M","L","XL"], colors:["Grey","Black"], img:""},
-  {id:7, name:"Cotton shorts", cat:"Shorts", price:990, stock:25, desc:"Breathable cotton shorts.", sizes:["S","M","L","XL"], colors:["Black","Beige"], img:""},
-  {id:8, name:"Sports shorts", cat:"Shorts", price:850, stock:18, desc:"Lightweight sports shorts.", sizes:["S","M","L"], colors:["Navy","Black"], img:""},
-  {id:9, name:"Slim-fit trousers", cat:"Trousers", price:2290, stock:14, desc:"Slim-fit cotton trousers.", sizes:["30","32","34","36"], colors:["Khaki","Black"], img:""},
-  {id:10, name:"Formal straight trousers", cat:"Trousers", price:2450, stock:11, desc:"Straight-fit formal trousers.", sizes:["30","32","34","36"], colors:["Charcoal","Navy"], tag:"New", img:""},
-];
+const supabaseClient = supabase.createClient(
+  'https://yfgyezzncxjnfypnfrci.supabase.co',
+  'sb_publishable_HXHEKKJLf_I0Gm3DSxFyLA_TGfZEjl8'
+);
 
-function loadProducts(){
-  const raw = localStorage.getItem('aw_products');
-  if(!raw){ localStorage.setItem('aw_products', JSON.stringify(DEFAULT_PRODUCTS)); return DEFAULT_PRODUCTS; }
-  try{ return JSON.parse(raw); }catch(e){ return DEFAULT_PRODUCTS; }
-}
-const products = loadProducts().filter(p=>p.stock===undefined || p.stock>0);
+let products = [];
+let cart = [];
+const sel = {};
 
-function loadCategories(){
-  const raw = localStorage.getItem('aw_categories');
-  const def = ['T-Shirts','Ladies Suits','Tracksuits','Shorts','Trousers'];
-  if(!raw){ localStorage.setItem('aw_categories', JSON.stringify(def)); return def; }
-  try{ return JSON.parse(raw); }catch(e){ return def; }
+async function loadProducts(){
+  const { data, error } = await supabaseClient.from('products').select('*').gt('stock', 0).order('created_at', {ascending:false});
+  if(error){ console.error(error); return []; }
+  return data;
 }
-function renderChips(){
-  const cats = loadCategories();
+
+async function loadCategories(){
+  const { data, error } = await supabaseClient.from('categories').select('*').order('id');
+  if(error){ console.error(error); return []; }
+  return data.map(c=>c.name);
+}
+
+function renderChips(cats){
   const chipsEl = document.getElementById('chips');
   chipsEl.innerHTML = `<button class="chip active" data-cat="all">All</button>` +
     cats.map(c=>`<button class="chip" data-cat="${c}">${c}</button>`).join('');
@@ -242,10 +237,14 @@ function renderChips(){
     };
   });
 }
-renderChips();
 
-let cart = [];
-const sel = {};
+async function init(){
+  const [prods, cats] = await Promise.all([loadProducts(), loadCategories()]);
+  products = prods;
+  renderChips(cats);
+  renderGrid('all');
+  renderCart();
+}
 
 function renderGrid(filter){
   const grid = document.getElementById('productGrid');
@@ -258,7 +257,7 @@ function renderGrid(filter){
       <div class="card-img" ${p.img?`style="background-image:url('${p.img}'); background-size:cover; background-position:center;"`:''}>${p.tag?`<span class="tag">${p.tag}</span>`:''}${p.img?'':'Product photo'}</div>
       <div class="card-body">
         <h3>${p.name}</h3>
-        ${p.desc?`<div style="font-size:12px;color:rgba(34,28,20,0.55);margin-bottom:8px;">${p.desc}</div>`:''}
+        ${p.description?`<div style="font-size:12px;color:rgba(34,28,20,0.55);margin-bottom:8px;">${p.description}</div>`:''}
         <div class="price">Rs. ${p.price.toLocaleString()}</div>
         <div class="opt-row" data-type="size">
           ${p.sizes.map(s=>`<button class="opt ${sel[p.id].size===s?'sel':''}" data-size="${s}">${s}</button>`).join('')}
@@ -415,14 +414,12 @@ function placeOrder(name, phone, city, address, notes, total){
   const payLabel = payMethod==='cod' ? 'Cash on delivery' : 'Online transfer';
   const waMsg = `New order ${orderId}%0AName: ${name}%0APhone: ${phone}%0ACity: ${city}%0AAddress: ${address}%0A%0AItems:%0A${itemsText}%0A%0ATotal: Rs. ${total.toLocaleString()}%0APayment: ${payLabel}${payMethod==='online'?' (screenshot to follow)':''}${notes?('%0ANotes: '+notes):''}`;
 
-  const orders = JSON.parse(localStorage.getItem('aw_orders') || '[]');
-  orders.unshift({
+  supabaseClient.from('orders').insert({
     id: orderId, name, phone, city, address, notes, total,
-    payMethod, items: cart.map(c=>({name:c.name, size:c.size, color:c.color, qty:c.qty, price:c.price})),
-    status: payMethod==='online' ? 'awaiting_payment' : 'confirmed',
-    createdAt: new Date().toISOString()
-  });
-  localStorage.setItem('aw_orders', JSON.stringify(orders));
+    pay_method: payMethod,
+    items: cart.map(c=>({name:c.name, size:c.size, color:c.color, qty:c.qty, price:c.price})),
+    status: payMethod==='online' ? 'awaiting_payment' : 'confirmed'
+  }).then(({error})=>{ if(error) console.error(error); });
 
   checkoutModal.innerHTML = `
     <div class="success">
@@ -439,8 +436,7 @@ function placeOrder(name, phone, city, address, notes, total){
 
 document.getElementById('checkoutBtn').onclick = ()=>{ closeDrawer(); openCheckout(); };
 
-renderGrid('all');
-renderCart();
+init();
 </script>
 </body>
 </html>
