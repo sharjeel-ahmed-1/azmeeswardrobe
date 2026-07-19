@@ -356,7 +356,7 @@ async function renderOrders(){
       <div class="order-meta">
         ${o.name} · ${o.phone} · ${o.city}<br>
         ${o.address}<br>
-        Payment: ${o.pay_method==='online'?'Online transfer':'Cash on delivery'}${o.notes?('<br>Notes: '+o.notes):''}
+        Payment: ${o.pay_method.includes('online')?'Online transfer':'Cash on delivery'} ${o.pay_method.includes('pickup')?'· Pickup':'· Delivery'}${o.notes?('<br>Notes: '+o.notes):''}
       </div>
       <div class="order-items">
         ${o.items.map(i=>`<div>${i.qty}x ${i.name} — ${i.size}, ${i.color} — Rs. ${(i.price*i.qty).toLocaleString()}</div>`).join('')}
