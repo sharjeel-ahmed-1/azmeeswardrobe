@@ -131,6 +131,7 @@
 
   .toast{position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--ink); color:var(--stone); padding:12px 22px; border-radius:4px; font-size:13px; opacity:0; pointer-events:none; transition:.25s; z-index:70;}
   .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+  #lightboxOverlay.open{display:flex;}
 </style>
 </head>
 <body>
@@ -201,6 +202,10 @@
 
 <div class="toast" id="toast"></div>
 
+<div id="lightboxOverlay" onclick="closeLightbox()" style="position:fixed; inset:0; background:rgba(34,28,20,0.85); display:none; align-items:center; justify-content:center; z-index:80; padding:30px; cursor:zoom-out;">
+  <img id="lightboxImg" src="" style="max-width:90vw; max-height:90vh; border-radius:4px; object-fit:contain;">
+</div>
+
 <script>
 const supabaseClient = supabase.createClient(
   'https://yfgyezzncxjnfypnfrci.supabase.co',
@@ -261,9 +266,10 @@ function renderGrid(filter){
   grid.innerHTML = list.map(p=>{
     sel[p.id] = sel[p.id] || {size:p.sizes[0], color:p.colors[0]};
     const oos = p.stock <= 0;
+    const img = imageFor(p, sel[p.id].color);
     return `
     <div class="card" data-id="${p.id}" style="${oos?'opacity:0.55;':''}">
-      <div class="card-img" ${p.img?`style="background-image:url('${p.img}'); background-size:cover; background-position:center;"`:''}>${oos?'<span class="tag" style="background:var(--ink); color:var(--stone);">Out of stock</span>':(p.tag?`<span class="tag">${p.tag}</span>`:'')}${p.img?'':'Product photo'}</div>
+      <div class="card-img" id="img_${p.id}" ${img?`style="background-image:url('${img}'); background-size:cover; background-position:center; cursor:zoom-in;"`:''}>${oos?'<span class="tag" style="background:var(--ink); color:var(--stone);">Out of stock</span>':(p.tag?`<span class="tag">${p.tag}</span>`:'')}${img?'':'Product photo'}</div>
       <div class="card-body">
         <h3>${p.name}</h3>
         ${p.description?`<div style="font-size:12px;color:rgba(34,28,20,0.55);margin-bottom:8px;">${p.description}</div>`:''}
@@ -295,6 +301,18 @@ function renderGrid(filter){
       sel[id].color = btn.dataset.color;
       btn.parentElement.querySelectorAll('.opt').forEach(o=>o.classList.remove('sel'));
       btn.classList.add('sel');
+      const p = products.find(x=>x.id===id);
+      const img = imageFor(p, btn.dataset.color);
+      const imgEl = document.getElementById('img_'+id);
+      if(img){ imgEl.style.backgroundImage = `url('${img}')`; imgEl.style.backgroundSize='cover'; imgEl.style.backgroundPosition='center'; imgEl.style.cursor='zoom-in'; }
+    };
+  });
+  grid.querySelectorAll('.card-img').forEach(el=>{
+    el.onclick = ()=>{
+      const id = +el.closest('.card').dataset.id;
+      const p = products.find(x=>x.id===id);
+      const img = imageFor(p, sel[id].color);
+      if(img) openLightbox(img);
     };
   });
   grid.querySelectorAll('[data-add]').forEach(btn=>{
@@ -311,6 +329,18 @@ function renderGrid(filter){
     };
   });
 }
+
+function imageFor(p, color){
+  if(p.images && p.images[color]) return p.images[color];
+  return p.img || '';
+}
+
+function openLightbox(src){
+  const overlay = document.getElementById('lightboxOverlay');
+  document.getElementById('lightboxImg').src = src;
+  overlay.classList.add('open');
+}
+function closeLightbox(){ document.getElementById('lightboxOverlay').classList.remove('open'); }
 
 function renderCart(){
   const wrap = document.getElementById('drawerItems');
