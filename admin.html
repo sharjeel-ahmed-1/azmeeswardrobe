@@ -16,8 +16,8 @@
   .wrap{max-width:1100px; margin:0 auto; padding:32px;}
 
   #gate{max-width:360px; margin:120px auto; text-align:center;}
-  #gate input{width:100%; padding:12px 14px; border:1px solid var(--line); border-radius:3px; font-size:14px; margin:16px 0; background:var(--white);}
-  #gate button{width:100%; background:var(--ink); color:var(--stone); padding:12px; border:none; border-radius:3px; font-size:14px;}
+  #gate input{width:100%; padding:12px 14px; border:1px solid var(--line); border-radius:10px; font-size:14px; margin:16px 0; background:var(--white);}
+  #gate button{width:100%; background:var(--ink); color:var(--stone); padding:12px; border:none; border-radius:10px; font-size:14px;}
   #gate p{font-size:13px; color:rgba(34,28,20,0.6);}
 
   #app{display:none;}
@@ -28,23 +28,23 @@
   .panel{display:none;}
   .panel.active{display:block;}
 
-  .box{background:var(--white); border:1px solid var(--line); border-radius:6px; padding:22px; margin-bottom:24px;}
+  .box{background:var(--white); border:1px solid var(--line); border-radius:18px; padding:22px; margin-bottom:24px;}
   .box h2{font-size:18px; margin-bottom:16px;}
   .frow{display:flex; gap:14px; margin-bottom:14px;}
   .field{flex:1; margin-bottom:0;}
   .field label{font-size:12px; font-weight:500; display:block; margin-bottom:5px; color:rgba(34,28,20,0.7);}
-  .field input, .field select, .field textarea{width:100%; border:1px solid var(--line); border-radius:3px; padding:9px 11px; font-size:14px; font-family:inherit; background:var(--stone);}
+  .field input, .field select, .field textarea{width:100%; border:1px solid var(--line); border-radius:10px; padding:9px 11px; font-size:14px; font-family:inherit; background:var(--stone);}
   .field input:focus, .field select:focus, .field textarea:focus{outline:none; border-color:var(--olive);}
-  .save-btn{background:var(--ink); color:var(--stone); border:none; padding:11px 26px; border-radius:3px; font-size:14px;}
+  .save-btn{background:var(--ink); color:var(--stone); border:none; padding:11px 26px; border-radius:10px; font-size:14px;}
   .save-btn:hover{background:var(--olive);}
-  .img-preview{width:70px; height:88px; border-radius:3px; background:#f4f0e8; background-size:cover; background-position:center; border:1px solid var(--line); flex-shrink:0;}
+  .img-preview{width:70px; height:88px; border-radius:10px; background:#f4f0e8; background-size:cover; background-position:center; border:1px solid var(--line); flex-shrink:0;}
 
   table{width:100%; border-collapse:collapse; font-size:13px;}
   th{text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:rgba(34,28,20,0.55); padding:8px 10px; border-bottom:1px solid var(--line);}
   td{padding:10px; border-bottom:1px solid var(--line); vertical-align:top;}
-  .thumb{width:40px; height:50px; border-radius:3px; background:#f4f0e8; background-size:cover; background-position:center;}
+  .thumb{width:40px; height:50px; border-radius:10px; background:#f4f0e8; background-size:cover; background-position:center;}
   .row-actions{display:flex; gap:8px;}
-  .row-actions button{border:1px solid var(--line); background:none; padding:5px 10px; border-radius:3px; font-size:12px;}
+  .row-actions button{border:1px solid var(--line); background:none; padding:5px 10px; border-radius:10px; font-size:12px;}
   .row-actions button:hover{border-color:var(--olive);}
   .row-actions .del{color:var(--clay); border-color:var(--clay);}
   .stock-low{color:var(--clay); font-weight:600;}
@@ -54,14 +54,14 @@
   .badge.confirmed{background:rgba(91,107,61,0.18); color:var(--olive);}
   .badge.delivered{background:rgba(91,107,61,0.3); color:#3a4527;}
 
-  .order-card{background:var(--white); border:1px solid var(--line); border-radius:6px; padding:18px 20px; margin-bottom:14px;}
+  .order-card{background:var(--white); border:1px solid var(--line); border-radius:18px; padding:18px 20px; margin-bottom:14px;}
   .order-top{display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;}
   .order-id{font-family:'Fraunces',serif; font-size:16px;}
   .order-meta{font-size:13px; color:rgba(34,28,20,0.7); margin-bottom:8px; line-height:1.7;}
   .order-items{font-size:13px; margin-bottom:12px;}
   .order-items div{padding:3px 0;}
   .order-actions{display:flex; gap:10px; flex-wrap:wrap;}
-  .order-actions button{border:1px solid var(--ink); background:none; padding:8px 16px; border-radius:3px; font-size:13px;}
+  .order-actions button{border:1px solid var(--ink); background:none; padding:8px 16px; border-radius:10px; font-size:13px;}
   .order-actions button.primary{background:var(--ink); color:var(--stone);}
   .order-actions button.wa{border-color:var(--olive); color:var(--olive);}
   .empty{text-align:center; color:rgba(34,28,20,0.5); padding:40px; font-size:14px;}
@@ -79,7 +79,7 @@
 <div id="app" class="wrap">
   <header>
     <h1>Azmees Wardrobe — Admin</h1>
-    <button class="tab" style="border-radius:3px;" onclick="location.href='index.html'">View store</button>
+    <button class="tab" style="border-radius:10px;" onclick="location.href='index.html'">View store</button>
   </header>
 
   <div class="tabs">
@@ -126,7 +126,8 @@
         <div class="field"><label>Description</label><textarea id="p_desc" rows="2" placeholder="Soft cotton crewneck, everyday fit."></textarea></div>
       </div>
       <div class="field"><label>Photo per color</label>
-        <div style="font-size:12px; color:rgba(34,28,20,0.6); margin-bottom:10px;">Type the colors above first — an upload slot appears for each one. Customers see the matching photo when they pick that color.</div>
+        <div style="font-size:12px; color:rgba(34,28,20,0.6); margin-bottom:6px;">Type the colors above first — an upload slot appears for each one. Customers see the matching photo when they pick that color.</div>
+        <div style="font-size:12px; background:var(--stone); border-radius:8px; padding:8px 12px; margin-bottom:10px; color:rgba(34,28,20,0.75);">📐 Ideal photo size: <strong>1000 × 1500px</strong> (portrait, 3:4 ratio) — full-body shot, subject centered, plain background. Photos of a different shape will still work but may get cropped at the top/bottom on the product page.</div>
         <div id="colorImageSlots" style="display:flex; gap:14px; flex-wrap:wrap;"></div>
       </div>
       <button class="save-btn" onclick="saveProduct()">Save product</button>
@@ -217,7 +218,7 @@ async function renderCategories(){
     <tr>
       <td>${c}</td>
       <td>${products.filter(p=>p.cat===c).length}</td>
-      <td><button class="row-actions" style="border:1px solid var(--clay); color:var(--clay); background:none; padding:5px 10px; border-radius:3px; font-size:12px;" onclick="deleteCategory('${c}')">Delete</button></td>
+      <td><button class="row-actions" style="border:1px solid var(--clay); color:var(--clay); background:none; padding:5px 10px; border-radius:10px; font-size:12px;" onclick="deleteCategory('${c}')">Delete</button></td>
     </tr>`).join('') || `<tr><td colspan="3" class="empty">No categories yet.</td></tr>`;
 }
 
@@ -248,17 +249,50 @@ function syncColorImageSlots(){
       <input type="file" accept="image/*" style="font-size:11px; width:90px;" data-color="${c}">
     </div>`).join('');
   wrap.querySelectorAll('input[type=file]').forEach(inp=>{
-    inp.onchange = (e)=>{
+    inp.onchange = async (e)=>{
       const color = inp.dataset.color;
       const file = e.target.files[0];
       if(!file) return;
-      const reader = new FileReader();
-      reader.onload = ()=>{
-        colorImages[color] = reader.result;
-        document.getElementById('slot_'+color.replace(/\s+/g,'_')).style.cssText = `background-image:url('${reader.result}'); background-size:cover; background-position:center;`;
-      };
-      reader.readAsDataURL(file);
+      const slotId = 'slot_'+color.replace(/\s+/g,'_');
+      const slotEl = document.getElementById(slotId);
+      slotEl.style.cssText = 'display:flex;align-items:center;justify-content:center;font-size:10px;color:rgba(34,28,20,0.5);';
+      slotEl.textContent = 'Uploading...';
+
+      try{
+        const blob = await compressImageToBlob(file, 1000, 1500, 0.75);
+        const path = `${Date.now()}_${color.replace(/\s+/g,'_')}.jpg`;
+        const { error: uploadError } = await supabaseClient.storage.from('product-images').upload(path, blob, { contentType:'image/jpeg' });
+        if(uploadError){ alert('Upload failed: ' + uploadError.message); slotEl.textContent = ''; return; }
+        const { data } = supabaseClient.storage.from('product-images').getPublicUrl(path);
+        colorImages[color] = data.publicUrl;
+        slotEl.style.cssText = `background-image:url('${data.publicUrl}'); background-size:cover; background-position:center;`;
+        slotEl.textContent = '';
+      }catch(err){
+        alert('Upload error: ' + err.message);
+        slotEl.textContent = '';
+      }
     };
+  });
+}
+
+function compressImageToBlob(file, maxW, maxH, quality){
+  return new Promise((resolve)=>{
+    const reader = new FileReader();
+    reader.onload = (e)=>{
+      const img = new Image();
+      img.onload = ()=>{
+        let w = img.width, h = img.height;
+        const scale = Math.min(maxW / w, maxH / h, 1);
+        w = Math.round(w * scale);
+        h = Math.round(h * scale);
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        canvas.toBlob(blob=>resolve(blob), 'image/jpeg', quality);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
   });
 }
 
