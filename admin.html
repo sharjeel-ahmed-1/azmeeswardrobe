@@ -174,7 +174,7 @@ document.querySelectorAll('.tab[data-panel]').forEach(t=>{
     t.classList.add('active');
     document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
     document.getElementById('panel-'+t.dataset.panel).classList.add('active');
-    if(t.dataset.panel==='orders') renderOrders();
+    if(t.dataset.panel==='orders'){ document.getElementById('orderList').innerHTML = '<div class="empty">Loading...</div>'; renderOrders(); }
     if(t.dataset.panel==='categories') renderCategories();
   };
 });
@@ -204,6 +204,7 @@ async function saveCategory(){
 
 async function deleteCategory(name){
   const products = await getProducts();
+  if(products === null) return;
   if(products.some(p=>p.cat===name)){ alert('Move or delete products in this category first.'); return; }
   if(!confirm(`Delete category "${name}"?`)) return;
   await supabaseClient.from('categories').delete().eq('name', name);
@@ -214,6 +215,7 @@ async function deleteCategory(name){
 async function renderCategories(){
   const cats = await getCategories();
   const products = await getProducts();
+  if(products === null) return;
   document.getElementById('categoryTable').innerHTML = cats.map(c=>`
     <tr>
       <td>${c}</td>
@@ -229,11 +231,16 @@ async function populateCategoryDropdown(){
 
 async function getProducts(){
   const { data, error } = await supabaseClient.from('products').select('*').order('created_at', {ascending:false});
-  if(error){ console.error(error); return []; }
+  if(error){
+    console.error(error);
+    document.getElementById('productTable').innerHTML = `<tr><td colspan="7" class="empty" style="color:var(--clay);">Error loading products: ${error.message}</td></tr>`;
+    return null;
+  }
   return data;
 }
 
 async function init(){
+  document.getElementById('productTable').innerHTML = `<tr><td colspan="7" class="empty">Loading...</td></tr>`;
   await renderCategories();
   await populateCategoryDropdown();
   await renderProducts();
@@ -298,6 +305,7 @@ function compressImageToBlob(file, maxW, maxH, quality){
 
 async function renderProducts(){
   const list = await getProducts();
+  if(list === null) return;
   document.getElementById('productTable').innerHTML = list.map(p=>`
     <tr>
       <td><div class="thumb" style="${p.img?`background-image:url('${p.img}')`:''}"></div></td>
