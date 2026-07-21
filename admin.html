@@ -5,66 +5,273 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Azmees Wardrobe — Admin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 <style>
-  :root{ --stone:#EDE6D8; --ink:#221C14; --olive:#5B6B3D; --clay:#A6491F; --mustard:#D9A441; --line:rgba(34,28,20,0.15); --white:#fff; }
-  *{box-sizing:border-box; margin:0; padding:0;}
-  body{background:var(--stone); color:var(--ink); font-family:'Inter',sans-serif;}
-  h1,h2,h3{font-family:'Fraunces',serif; font-weight:600;}
-  button{font-family:inherit; cursor:pointer;}
-  .wrap{max-width:1100px; margin:0 auto; padding:32px;}
+  :root {
+    --bg-primary: #FAF9F6;      /* Soft alabaster cream background */
+    --bg-card: #FFFFFF;         /* Pure white cards */
+    --text-primary: #111113;    /* Rich obsidian black text */
+    --text-secondary: #5A5A62;  /* Cool charcoal grey for descriptions */
+    --accent-gold: #C5A880;     /* Muted luxury champagne gold */
+    --accent-gold-dark: #A98A60;/* Deeper gold for hover effects */
+    --accent-clay: #B3543B;     /* Rich rust red for prices & alerts */
+    --accent-olive: #5B6B3D;    /* Olive green for success states */
+    --line: rgba(17, 17, 19, 0.08); /* Minimalist border dividers */
+    --white: #FFFFFF;
+    --shadow-sm: 0 4px 12px rgba(17, 17, 19, 0.03);
+    --shadow-md: 0 12px 32px rgba(17, 17, 19, 0.06);
+    --shadow-lg: 0 24px 64px rgba(17, 17, 19, 0.1);
+  }
 
-  #gate{max-width:360px; margin:120px auto; text-align:center;}
-  #gate input{width:100%; padding:12px 14px; border:1px solid var(--line); border-radius:10px; font-size:14px; margin:16px 0; background:var(--white);}
-  #gate button{width:100%; background:var(--ink); color:var(--stone); padding:12px; border:none; border-radius:10px; font-size:14px;}
-  #gate p{font-size:13px; color:rgba(34,28,20,0.6);}
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3 {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+  }
+  button {
+    font-family: inherit;
+    cursor: pointer;
+    border: none;
+    background: none;
+    outline: none;
+    transition: all 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 32px; }
 
-  #app{display:none;}
-  header{display:flex; justify-content:space-between; align-items:center; margin-bottom:28px;}
-  .tabs{display:flex; gap:8px; margin-bottom:24px;}
-  .tab{border:1px solid var(--ink); background:none; padding:9px 20px; border-radius:20px; font-size:13px;}
-  .tab.active{background:var(--ink); color:var(--stone);}
-  .panel{display:none;}
-  .panel.active{display:block;}
+  /* Login Gate */
+  #gate {
+    max-width: 380px;
+    margin: 120px auto;
+    text-align: center;
+    padding: 40px 32px;
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    box-shadow: var(--shadow-lg);
+  }
+  #gate h1 { font-size: 28px; margin-bottom: 8px; }
+  #gate p { font-size: 13px; color: var(--text-secondary); margin-bottom: 24px; }
+  #gate input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    font-size: 14px;
+    margin-bottom: 16px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    transition: all 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+  }
+  #gate input:focus {
+    outline: none;
+    border-color: var(--accent-gold);
+    box-shadow: 0 0 0 3px rgba(197, 168, 128, 0.15);
+    background: var(--white);
+  }
+  #gate button {
+    width: 100%;
+    background: var(--text-primary);
+    color: var(--bg-primary);
+    padding: 14px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: var(--shadow-sm);
+  }
+  #gate button:hover {
+    background: var(--accent-gold);
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(197, 168, 128, 0.3);
+  }
+  #gate button:active { transform: translateY(0) scale(0.96); }
 
-  .box{background:var(--white); border:1px solid var(--line); border-radius:18px; padding:22px; margin-bottom:24px;}
-  .box h2{font-size:18px; margin-bottom:16px;}
-  .frow{display:flex; gap:14px; margin-bottom:14px;}
-  .field{flex:1; margin-bottom:0;}
-  .field label{font-size:12px; font-weight:500; display:block; margin-bottom:5px; color:rgba(34,28,20,0.7);}
-  .field input, .field select, .field textarea{width:100%; border:1px solid var(--line); border-radius:10px; padding:9px 11px; font-size:14px; font-family:inherit; background:var(--stone);}
-  .field input:focus, .field select:focus, .field textarea:focus{outline:none; border-color:var(--olive);}
-  .save-btn{background:var(--ink); color:var(--stone); border:none; padding:11px 26px; border-radius:10px; font-size:14px;}
-  .save-btn:hover{background:var(--olive);}
-  .img-preview{width:70px; height:88px; border-radius:10px; background:#f4f0e8; background-size:cover; background-position:center; border:1px solid var(--line); flex-shrink:0;}
+  /* App Dashboard Layout */
+  #app { display: none; }
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+  }
+  header h1 { font-size: 32px; }
+  .tabs { display: flex; gap: 10px; margin-bottom: 24px; }
+  .tab {
+    border: 1px solid var(--line);
+    background: var(--bg-card);
+    padding: 10px 24px;
+    border-radius: 40px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    box-shadow: var(--shadow-sm);
+  }
+  .tab.active, .tab:hover {
+    background: var(--text-primary);
+    color: var(--bg-primary);
+    border-color: var(--text-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(17, 17, 19, 0.1);
+  }
+  .tab:active { transform: translateY(0) scale(0.96); }
+  .panel { display: none; }
+  .panel.active { display: block; }
 
-  table{width:100%; border-collapse:collapse; font-size:13px;}
-  th{text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:rgba(34,28,20,0.55); padding:8px 10px; border-bottom:1px solid var(--line);}
-  td{padding:10px; border-bottom:1px solid var(--line); vertical-align:top;}
-  .thumb{width:40px; height:50px; border-radius:10px; background:#f4f0e8; background-size:cover; background-position:center;}
-  .row-actions{display:flex; gap:8px;}
-  .row-actions button{border:1px solid var(--line); background:none; padding:5px 10px; border-radius:10px; font-size:12px;}
-  .row-actions button:hover{border-color:var(--olive);}
-  .row-actions .del{color:var(--clay); border-color:var(--clay);}
-  .stock-low{color:var(--clay); font-weight:600;}
+  /* Content Boxes */
+  .box {
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 28px;
+    margin-bottom: 28px;
+    box-shadow: var(--shadow-sm);
+  }
+  .box h2 { font-size: 20px; margin-bottom: 20px; font-family: 'Fraunces', serif; }
+  .frow { display: flex; gap: 16px; margin-bottom: 16px; }
+  .field { flex: 1; margin-bottom: 0; }
+  .field label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: block;
+    margin-bottom: 6px;
+    color: var(--text-secondary);
+  }
+  .field input, .field select, .field textarea {
+    width: 100%;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 11px 14px;
+    font-size: 14px;
+    font-family: inherit;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    transition: all 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+  }
+  .field input:focus, .field select:focus, .field textarea:focus {
+    outline: none;
+    border-color: var(--accent-gold);
+    box-shadow: 0 0 0 3px rgba(197, 168, 128, 0.15);
+    background: var(--white);
+  }
+  .save-btn {
+    background: var(--text-primary);
+    color: var(--bg-primary);
+    border: none;
+    padding: 13px 30px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: var(--shadow-sm);
+  }
+  .save-btn:hover {
+    background: var(--accent-gold);
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(197, 168, 128, 0.3);
+  }
+  .save-btn:active { transform: translateY(0) scale(0.96); }
+  
+  .img-preview {
+    width: 70px;
+    height: 88px;
+    border-radius: 12px;
+    background: #f4f0e8;
+    background-size: cover;
+    background-position: center;
+    border: 1px solid var(--line);
+    flex-shrink: 0;
+    box-shadow: var(--shadow-sm);
+  }
 
-  .badge{font-size:11px; padding:3px 9px; border-radius:10px; font-weight:600;}
-  .badge.pending{background:rgba(217,164,65,0.25); color:#7a5510;}
-  .badge.confirmed{background:rgba(91,107,61,0.18); color:var(--olive);}
-  .badge.delivered{background:rgba(91,107,61,0.3); color:#3a4527;}
+  /* Tables & Lists */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th {
+    text-align: left;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+    padding: 12px 10px;
+    border-bottom: 1.5px solid var(--line);
+    font-weight: 600;
+  }
+  td { padding: 12px 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  .thumb {
+    width: 44px;
+    height: 56px;
+    border-radius: 8px;
+    background: #f4f0e8;
+    background-size: cover;
+    background-position: center;
+    box-shadow: var(--shadow-sm);
+  }
+  .row-actions { display: flex; gap: 8px; }
+  .row-actions button {
+    border: 1px solid var(--line);
+    background: var(--bg-primary);
+    padding: 6px 12px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .row-actions button:hover {
+    border-color: var(--text-primary);
+    background: var(--text-primary);
+    color: var(--bg-primary);
+  }
+  .row-actions button:active { transform: scale(0.94); }
+  .row-actions .del { color: var(--accent-clay); border-color: var(--accent-clay); background: transparent; }
+  .row-actions .del:hover { background: var(--accent-clay); color: #fff; border-color: var(--accent-clay); }
+  .stock-low { color: var(--accent-clay); font-weight: 700; }
 
-  .order-card{background:var(--white); border:1px solid var(--line); border-radius:18px; padding:18px 20px; margin-bottom:14px;}
-  .order-top{display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;}
-  .order-id{font-family:'Fraunces',serif; font-size:16px;}
-  .order-meta{font-size:13px; color:rgba(34,28,20,0.7); margin-bottom:8px; line-height:1.7;}
-  .order-items{font-size:13px; margin-bottom:12px;}
-  .order-items div{padding:3px 0;}
-  .order-actions{display:flex; gap:10px; flex-wrap:wrap;}
-  .order-actions button{border:1px solid var(--ink); background:none; padding:8px 16px; border-radius:10px; font-size:13px;}
-  .order-actions button.primary{background:var(--ink); color:var(--stone);}
-  .order-actions button.wa{border-color:var(--olive); color:var(--olive);}
-  .empty{text-align:center; color:rgba(34,28,20,0.5); padding:40px; font-size:14px;}
+  /* Status Badges */
+  .badge { font-size: 11px; padding: 4px 10px; border-radius: 20px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+  .badge.pending { background: rgba(217, 164, 65, 0.15); color: #7a5510; }
+  .badge.confirmed { background: rgba(91, 107, 61, 0.15); color: var(--accent-olive); }
+  .badge.delivered { background: rgba(91, 107, 61, 0.28); color: #3a4527; }
+
+  /* Order Cards */
+  .order-card {
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+  }
+  .order-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
+  .order-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .order-id { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 600; }
+  .order-meta { font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.8; }
+  .order-items { font-size: 13px; margin-bottom: 16px; background: var(--bg-primary); padding: 12px 16px; border-radius: 12px; }
+  .order-items div { padding: 4px 0; }
+  .order-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+  .order-actions button {
+    border: 1.5px solid var(--text-primary);
+    background: none;
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .order-actions button.primary { background: var(--text-primary); color: var(--bg-primary); }
+  .order-actions button.primary:hover { background: var(--accent-gold); border-color: var(--accent-gold); color: #fff; }
+  .order-actions button.wa { border-color: var(--accent-olive); color: var(--accent-olive); }
+  .order-actions button.wa:hover { background: var(--accent-olive); color: #fff; }
+  .empty { text-align: center; color: var(--text-secondary); padding: 50px; font-size: 14px; }
 </style>
 </head>
 <body>
@@ -149,42 +356,50 @@
 </div>
 
 <script>
-function tryLogin(){
-  const val = document.getElementById('gatePass').value;
-  if(val === 'azmees2026'){
-    localStorage.setItem('aw_admin_ok','1');
-    document.getElementById('gate').style.display='none';
-    document.getElementById('app').style.display='block';
-    init();
-  } else {
-    document.getElementById('gatePass').style.borderColor = '#A6491F';
-    document.getElementById('gatePass').value='';
-    document.getElementById('gatePass').placeholder='Wrong passcode, try again';
-  }
-}
-if(localStorage.getItem('aw_admin_ok')==='1'){
-  document.getElementById('gate').style.display='none';
-  document.getElementById('app').style.display='block';
-  window.addEventListener('DOMContentLoaded', init);
-}
-
-document.querySelectorAll('.tab[data-panel]').forEach(t=>{
-  t.onclick = ()=>{
-    document.querySelectorAll('.tab[data-panel]').forEach(x=>x.classList.remove('active'));
-    t.classList.add('active');
-    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-    document.getElementById('panel-'+t.dataset.panel).classList.add('active');
-    if(t.dataset.panel==='orders'){ document.getElementById('orderList').innerHTML = '<div class="empty">Loading...</div>'; renderOrders(); }
-    if(t.dataset.panel==='categories') renderCategories();
-  };
-});
-
+let supabaseClient;
 let colorImages = {};
 
-const supabaseClient = supabase.createClient(
-  'https://yfgyezzncxjnfypnfrci.supabase.co',
-  'sb_publishable_HXHEKKJLf_I0Gm3DSxFyLA_TGfZEjl8'
-);
+// Cached DOM Elements
+let elGate, elGatePass, elApp, elCategoryTable, elProductTable, elOrderList;
+let elCName, elPCat, elPName, elPPrice, elPStock, elPTag, elPSizes, elPColors, elPDesc;
+let elPId, elFormTitle, elCancelEdit, elColorImageSlots;
+
+function cacheDOMElements() {
+  elGate = document.getElementById('gate');
+  elGatePass = document.getElementById('gatePass');
+  elApp = document.getElementById('app');
+  elCategoryTable = document.getElementById('categoryTable');
+  elProductTable = document.getElementById('productTable');
+  elOrderList = document.getElementById('orderList');
+  
+  elCName = document.getElementById('c_name');
+  elPCat = document.getElementById('p_cat');
+  elPName = document.getElementById('p_name');
+  elPPrice = document.getElementById('p_price');
+  elPStock = document.getElementById('p_stock');
+  elPTag = document.getElementById('p_tag');
+  elPSizes = document.getElementById('p_sizes');
+  elPColors = document.getElementById('p_colors');
+  elPDesc = document.getElementById('p_desc');
+  elPId = document.getElementById('p_id');
+  elFormTitle = document.getElementById('formTitle');
+  elCancelEdit = document.getElementById('cancelEdit');
+  elColorImageSlots = document.getElementById('colorImageSlots');
+}
+
+function tryLogin(){
+  const val = elGatePass.value;
+  if(val === 'azmees2026'){
+    localStorage.setItem('aw_admin_ok','1');
+    elGate.style.display='none';
+    elApp.style.display='block';
+    init();
+  } else {
+    elGatePass.style.borderColor = '#A6491F';
+    elGatePass.value='';
+    elGatePass.placeholder='Wrong passcode, try again';
+  }
+}
 
 async function getCategories(){
   const { data, error } = await supabaseClient.from('categories').select('*').order('id');
@@ -193,11 +408,11 @@ async function getCategories(){
 }
 
 async function saveCategory(){
-  const name = document.getElementById('c_name').value.trim();
+  const name = elCName.value.trim();
   if(!name) return;
   const { error } = await supabaseClient.from('categories').insert({name});
   if(error){ alert(error.message.includes('duplicate') ? 'Category already exists.' : error.message); return; }
-  document.getElementById('c_name').value='';
+  elCName.value='';
   await renderCategories();
   await populateCategoryDropdown();
 }
@@ -216,7 +431,7 @@ async function renderCategories(){
   const cats = await getCategories();
   const products = await getProducts();
   if(products === null) return;
-  document.getElementById('categoryTable').innerHTML = cats.map(c=>`
+  elCategoryTable.innerHTML = cats.map(c=>`
     <tr>
       <td>${c}</td>
       <td>${products.filter(p=>p.cat===c).length}</td>
@@ -226,29 +441,29 @@ async function renderCategories(){
 
 async function populateCategoryDropdown(){
   const cats = await getCategories();
-  document.getElementById('p_cat').innerHTML = cats.map(c=>`<option>${c}</option>`).join('');
+  elPCat.innerHTML = cats.map(c=>`<option>${c}</option>`).join('');
 }
 
 async function getProducts(){
   const { data, error } = await supabaseClient.from('products').select('*').order('created_at', {ascending:false});
   if(error){
     console.error(error);
-    document.getElementById('productTable').innerHTML = `<tr><td colspan="7" class="empty" style="color:var(--clay);">Error loading products: ${error.message}</td></tr>`;
+    elProductTable.innerHTML = `<tr><td colspan="7" class="empty" style="color:var(--clay);">Error loading products: ${error.message}</td></tr>`;
     return null;
   }
   return data;
 }
 
 async function init(){
-  document.getElementById('productTable').innerHTML = `<tr><td colspan="7" class="empty">Loading...</td></tr>`;
+  elProductTable.innerHTML = `<tr><td colspan="7" class="empty">Loading...</td></tr>`;
   await renderCategories();
   await populateCategoryDropdown();
   await renderProducts();
 }
 
 function syncColorImageSlots(){
-  const colors = document.getElementById('p_colors').value.split(',').map(s=>s.trim()).filter(Boolean);
-  const wrap = document.getElementById('colorImageSlots');
+  const colors = elPColors.value.split(',').map(s=>s.trim()).filter(Boolean);
+  const wrap = elColorImageSlots;
   wrap.innerHTML = colors.map(c=>`
     <div style="text-align:center;">
       <div class="img-preview" id="slot_${c.replace(/\s+/g,'_')}" style="${colorImages[c]?`background-image:url('${colorImages[c]}'); background-size:cover; background-position:center;`:''}"></div>
@@ -306,7 +521,7 @@ function compressImageToBlob(file, maxW, maxH, quality){
 async function renderProducts(){
   const list = await getProducts();
   if(list === null) return;
-  document.getElementById('productTable').innerHTML = list.map(p=>`
+  elProductTable.innerHTML = list.map(p=>`
     <tr>
       <td><div class="thumb" style="${p.img?`background-image:url('${p.img}')`:''}"></div></td>
       <td>${p.name}</td>
@@ -324,22 +539,22 @@ async function renderProducts(){
 }
 
 async function saveProduct(){
-  const name = document.getElementById('p_name').value.trim();
-  const price = +document.getElementById('p_price').value;
-  const stock = +document.getElementById('p_stock').value;
-  const sizes = document.getElementById('p_sizes').value.split(',').map(s=>s.trim()).filter(Boolean);
-  const colors = document.getElementById('p_colors').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const name = elPName.value.trim();
+  const price = +elPPrice.value;
+  const stock = +elPStock.value;
+  const sizes = elPSizes.value.split(',').map(s=>s.trim()).filter(Boolean);
+  const colors = elPColors.value.split(',').map(s=>s.trim()).filter(Boolean);
   if(!name || !price || !stock || sizes.length===0 || colors.length===0){
     alert('Fill name, price, stock, at least one size and one color.');
     return;
   }
-  const id = document.getElementById('p_id').value;
+  const id = elPId.value;
   const data = {
     name, price, stock,
-    cat: document.getElementById('p_cat').value,
-    tag: document.getElementById('p_tag').value.trim(),
+    cat: elPCat.value,
+    tag: elPTag.value.trim(),
     sizes, colors,
-    description: document.getElementById('p_desc').value.trim(),
+    description: elPDesc.value.trim(),
     images: colorImages,
     img: colorImages[colors[0]] || ''
   };
@@ -359,19 +574,19 @@ async function editProduct(id){
   const list = await getProducts();
   const p = list.find(x=>x.id===id);
   if(!p) return;
-  document.getElementById('formTitle').textContent = 'Edit product';
-  document.getElementById('p_id').value = p.id;
-  document.getElementById('p_name').value = p.name;
-  document.getElementById('p_cat').value = p.cat;
-  document.getElementById('p_price').value = p.price;
-  document.getElementById('p_stock').value = p.stock;
-  document.getElementById('p_tag').value = p.tag||'';
-  document.getElementById('p_sizes').value = p.sizes.join(', ');
-  document.getElementById('p_colors').value = p.colors.join(', ');
-  document.getElementById('p_desc').value = p.description||'';
+  elFormTitle.textContent = 'Edit product';
+  elPId.value = p.id;
+  elPName.value = p.name;
+  elPCat.value = p.cat;
+  elPPrice.value = p.price;
+  elPStock.value = p.stock;
+  elPTag.value = p.tag||'';
+  elPSizes.value = p.sizes.join(', ');
+  elPColors.value = p.colors.join(', ');
+  elPDesc.value = p.description||'';
   colorImages = { ...(p.images||{}) };
   syncColorImageSlots();
-  document.getElementById('cancelEdit').style.display = 'inline-block';
+  elCancelEdit.style.display = 'inline-block';
   window.scrollTo({top:0, behavior:'smooth'});
 }
 
@@ -382,11 +597,11 @@ async function deleteProduct(id){
 }
 
 function resetForm(){
-  document.getElementById('formTitle').textContent = 'Add a product';
+  elFormTitle.textContent = 'Add a product';
   ['p_id','p_name','p_price','p_stock','p_tag','p_sizes','p_colors','p_desc'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('cancelEdit').style.display='none';
+  elCancelEdit.style.display='none';
   colorImages = {};
-  document.getElementById('colorImageSlots').innerHTML = '';
+  elColorImageSlots.innerHTML = '';
 }
 
 async function getOrders(){
@@ -397,7 +612,7 @@ async function getOrders(){
 
 async function renderOrders(){
   const orders = await getOrders();
-  const wrap = document.getElementById('orderList');
+  const wrap = elOrderList;
   if(orders.length===0){ wrap.innerHTML = '<div class="empty">No orders yet.</div>'; return; }
   wrap.innerHTML = orders.map(o=>`
     <div class="order-card">
@@ -443,7 +658,38 @@ async function deleteOrder(id){
   await renderOrders();
 }
 
-if(localStorage.getItem('aw_admin_ok')==='1') init();
+window.addEventListener('DOMContentLoaded', () => {
+  supabaseClient = supabase.createClient(
+    'https://yfgyezzncxjnfypnfrci.supabase.co',
+    'sb_publishable_HXHEKKJLf_I0Gm3DSxFyLA_TGfZEjl8'
+  );
+  
+  cacheDOMElements();
+
+  // Tab Event Delegation
+  document.querySelector('.tabs').addEventListener('click', (e) => {
+    const tab = e.target.closest('.tab[data-panel]');
+    if (tab) {
+      document.querySelectorAll('.tab[data-panel]').forEach(x => x.classList.remove('active'));
+      tab.classList.add('active');
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      document.getElementById('panel-' + tab.dataset.panel).classList.add('active');
+      if (tab.dataset.panel === 'orders') {
+        elOrderList.innerHTML = '<div class="empty">Loading...</div>';
+        renderOrders();
+      }
+      if (tab.dataset.panel === 'categories') {
+        renderCategories();
+      }
+    }
+  });
+
+  if(localStorage.getItem('aw_admin_ok')==='1'){
+    elGate.style.display='none';
+    elApp.style.display='block';
+    init();
+  }
+});
 </script>
 </body>
 </html>
